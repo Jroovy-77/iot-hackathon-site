@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>ปุ่มเรียกเรือ รุ่น 2 — แยกชิ้นกล่องคุยสองทาง</title>
+  <meta name="description" content="เลื่อนลงเพื่อดูว่ากล่องติดบ้านที่คุยกับทีมช่วยเหลือได้สองทางทำงานอย่างไร ทีละชิ้น ทีละสาย แล้วลองกดเอง">
+  <meta name="theme-color" content="#F3F2EE">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+  <script>
+    // ตั้งโหมดก่อนวาดหน้า เพื่อไม่ให้จอกระพริบ
+    (function () {
+      var q = new URLSearchParams(location.search);
+      var h = document.documentElement;
+      if (q.has('at')) h.classList.add('at');
+      if (q.get('record') === '1') h.classList.add('record');
+      if (q.get('shot') === '1') h.classList.add('shot');
+      if (q.get('still') === '1') h.classList.add('no3d');
+      if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches && !q.has('at') && q.get('record') !== '1') h.classList.add('reduced');
+      // ถ้าโหลดส่วน 3D ไม่สำเร็จภายในเวลาที่กำหนด ให้สลับเป็นภาพนิ่ง
+      window.__fallbackTimer = setTimeout(function () {
+        if (!window.__exploded3d) h.classList.add('no3d');
+      }, 12000);
+    })();
+  </script>
+  <!-- ไลบรารีเก็บในเครื่อง (ใช้ได้ไม่ต้องมีเน็ต): three@0.186.1, animejs@4.5.0 ดู vendor/README.txt -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three/three.module.js",
+        "animejs": "./vendor/animejs/anime.esm.min.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <span class="brand">ปุ่มเรียกเรือ <span class="ver">รุ่น 2</span></span>
+    <span class="progress" aria-hidden="true"><i id="bar"></i></span>
+  </header>
+
+  <div id="stage" aria-hidden="true"></div>
+  <div id="labels" aria-hidden="true"></div>
+
+  <!-- ฉาก 8: แผนที่สัญญาณ / ตัวรับที่ อบต. (ฉาก 3D แยก วาดบน canvas ของตัวเอง) -->
+  <div id="mapStage" aria-hidden="true"></div>
+  <div id="mapUi">
+    <div id="mapTags" aria-hidden="true"></div>
+    <p class="mu-air" id="muAir" role="status" aria-live="polite"></p>
+    <p class="mu-say" id="muSay"></p>
+    <div class="mapinfo" id="mapInfo3d"></div>
+    <div class="mu-rx" id="muRx"></div>
+    <div class="mu-btns">
+      <button type="button" class="btn-line" id="muSkip">ข้ามแผนที่</button>
+      <button type="button" class="btn-ink" id="muBack">กลับไปที่กล่อง</button>
+    </div>
+  </div>
+
+  <!-- ป้ายบังคับ: "จำลอง" ที่เดียวของหน้า (ฉาก 8) + เดโมเร่งเวลา -->
+  <div id="badges">
+    <span id="badgeSim" class="badge sim">จำลอง — ลองกดดูว่ากล่องทำงานอย่างไร</span>
+    <span id="badgeFast" class="badge fast">เดโมเร่งเวลา</span>
+  </div>
+
+  <!-- คำอธิบายสีสาย (ฉากผังต่อสาย) -->
+  <div id="legend" aria-hidden="true">
+    <p class="lg-h">สีของสาย</p>
+    <ul>
+      <li><i style="--c:#B4462F"></i>ไฟบวก</li>
+      <li><i style="--c:#1F1F1D"></i>กราวด์</li>
+      <li><i style="--c:#2E6DB4"></i>ข้อมูล</li>
+      <li><i style="--c:#7A4FB0"></i>เสียง</li>
+    </ul>
+    <p class="lg-n" id="legendCount"></p>
+  </div>
+
+  <!-- ผังแบบแบน (สร้างจากตารางสายชุดเดียวกับ 3D) -->
+  <section id="flat" aria-label="ผังต่อสายแบบแบน" hidden>
+    <div class="flat-tabs" id="flatTabs" role="tablist" aria-label="กลุ่มสาย"></div>
+    <div class="flat-body" id="flatBody"></div>
+  </section>
+
+  <!-- ฟองคำพูดของกล่อง -->
+  <div id="bubble" aria-hidden="true">
+    <div class="bb">
+      <svg class="spk" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="w" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/></svg>
+      <span class="txt"></span>
+    </div>
+    <span class="dv-tag">คำพูด: ค่าออกแบบ จะปรับหลังทดสอบ</span>
+  </div>
+
+  <main id="track">
+
+    <!-- ฉาก 1 · ปัญหา -->
+    <section class="step wide" data-step="1" data-from="0" data-to="11" data-at="0.08">
+      <div class="card">
+        <h2>น้ำท่วมทีไร คำเตือนวิ่งทางเดียว ไม่มีใครรู้ว่าใครไม่ได้ยิน</h2>
+        <div class="stats">
+          <div class="stat" data-show="0">
+            <span class="num">162<small>คน</small></span>
+            <span class="what">เสียชีวิต น้ำท่วมใต้ พ.ย. 68 · ชาวบ้านบอกว่า <b>ไม่มีใครมา 3–4 วัน</b></span>
+            <span class="src">ที่มา: <a href="https://www.thaipbs.or.th/news/content/358938" target="_blank" rel="noopener">ไทยพีบีเอส</a></span>
+          </div>
+          <div class="stat" data-show="2">
+            <span class="num">67.3%</span>
+            <span class="what">ผู้สูงอายุ 60+ ที่ใช้เน็ต (ราว 1 ใน 3 ไม่ใช้)</span>
+            <span class="src">ที่มา: <a href="https://www.nso.go.th/nsoweb/storage/survey_detail/2025/20250228090924_27941.pdf" target="_blank" rel="noopener">สำนักงานสถิติแห่งชาติ</a></span>
+          </div>
+          <div class="stat" data-show="4">
+            <span class="num">3,143,962<small>คน</small></span>
+            <span class="what">ได้รับผลกระทบ น้ำท่วม 27 จังหวัด (6 ต.ค. 69)</span>
+            <span class="src">ที่มา: <a href="https://www.bangkokbiznews.com/news/1255230" target="_blank" rel="noopener">กรุงเทพธุรกิจ</a></span>
+          </div>
+        </div>
+        <p class="note" data-show="7">ข้อความเตือนเข้ามือถือหลายรอบ แต่คนไม่รู้หรือรู้ช้า · คำขอซ้ำ · ผู้สูงอายุไม่มีมือถือหายจากแผนที่
+          <span class="src">ที่มา: <a href="https://www.bangkokbiznews.com/tech/ai/1209690" target="_blank" rel="noopener">กรุงเทพธุรกิจ</a></span></p>
+      </div>
+    </section>
+
+    <!-- ฉาก 2 · กล่องทั้งชิ้น -->
+    <section class="step" data-step="2" data-from="11" data-to="19" data-at="0.16">
+      <img class="still" src="img/v2-2.png" alt="ภาพนิ่ง: กล่องติดบ้าน ประกอบครบ มีปุ่มแดง ปุ่มเขียว และไฟรอบปุ่มแดง" loading="lazy">
+      <div class="card">
+        <h2>ก่อนน้ำมาถามว่า "ได้ยินไหม" พอน้ำมาตอบว่า "ได้ยินแล้ว กำลังไป"</h2>
+        <p class="sub">กล่องติดบ้าน คุยกับทีมช่วยเหลือได้สองทาง สำหรับผู้สูงอายุที่ไม่มีสมาร์ตโฟน</p>
+      </div>
+    </section>
+
+    <!-- ฉาก 3-ก · หน้ากล่อง -->
+    <section class="step" data-step="3a" data-from="19" data-to="25" data-at="0.23">
+      <img class="still" src="img/v2-3a.png" alt="ภาพนิ่ง: ฝา ปุ่มแดง ปุ่มเขียว และไฟ 8 ดวง แยกออกมาด้านหน้า" loading="lazy">
+      <div class="card">
+        <h2>สองปุ่มกับไฟรอบปุ่มแดง คือทั้งหมดที่คนในบ้านต้องรู้</h2>
+        <ul class="parts" data-parts="box-lid btn-sos btn-ack leds"></ul>
+      </div>
+    </section>
+
+    <!-- ฉาก 3-ข · ข้างใน -->
+    <section class="step" data-step="3b" data-from="25" data-to="31" data-at="0.29">
+      <img class="still" src="img/v2-3b.png" alt="ภาพนิ่ง: แผ่นวงจร สมอง วิทยุ และเสาอากาศ ยกออกจากก้นกล่อง" loading="lazy">
+      <div class="card">
+        <h2>สมองกับวิทยุคุยกับทีมช่วยเหลือ ไม่ต้องใช้มือถือหรือเน็ต</h2>
+        <ul class="parts" data-parts="pcb mcu radio antenna q-power diodes passives"></ul>
+      </div>
+    </section>
+
+    <!-- ฉาก 3-ค · เสียง ไฟเลี้ยง น้ำ -->
+    <section class="step" data-step="3c" data-from="31" data-to="37" data-at="0.35">
+      <img class="still" src="img/v2-3c.png" alt="ภาพนิ่ง: ลำโพง ตัวขยายเสียง รางถ่าน สายไฟบ้าน และสายวัดน้ำ แยกออกจากตัวกล่อง" loading="lazy">
+      <div class="card">
+        <h2>พูดเตือนดัง ๆ ไฟดับก็ใช้ถ่าน สายห้อยรู้ว่าน้ำมาถึง</h2>
+        <ul class="parts" data-parts="amp speaker led9 battery power-in water-probe box-body"></ul>
+        <p class="total" data-show="34">รวม <b>≈ 657 บาท</b> <span class="est">(ประมาณการ)</span></p>
+        <p class="small" data-show="34">ราคาต่อชิ้นรวมกล่อง 68 บาทและไดโอด ผลบวกจึงอาจต่างจากยอดรวมเล็กน้อย</p>
+      </div>
+    </section>
+
+    <!-- ฉาก 3b · ผังต่อสาย 6 กลุ่ม (สายทุกเส้นมาจาก NETS ใน parts.js = docs/wiring.md ข้อ 3.1) -->
+    <section class="step wire" data-step="w1" data-from="37" data-to="42" data-at="0.40" data-group="1">
+      <div class="card">
+        <p class="grp"><span class="mono">กลุ่ม 1/6</span> ไฟเลี้ยง</p>
+        <h2>ใช้ไฟบ้านเป็นหลัก ไฟดับก็สลับไปใช้ถ่านเอง</h2>
+        <p class="sub">สวิตช์ตัดไฟปิดเสียงกับไฟตอนไม่ใช้ ถ่านจึงอยู่ได้ <span class="nw">≥ 7 วัน</span>ตอนไฟดับ <span class="dv-tag">ค่าออกแบบ จะปรับหลังทดสอบ</span></p>
+        <div class="flat-slot"></div>
+        <button type="button" class="btn-line flat-toggle">ดูผังแบบแบน</button>
+      </div>
+    </section>
+    <section class="step wire" data-step="w2" data-from="42" data-to="45" data-at="0.43" data-group="2">
+      <div class="card">
+        <p class="grp"><span class="mono">กลุ่ม 2/6</span> วิทยุ</p>
+        <h2>สมองคุยกับวิทยุ วิทยุส่งข้อความออกทางเสา</h2>
+        <div class="flat-slot"></div>
+        <button type="button" class="btn-line flat-toggle">ดูผังแบบแบน</button>
+      </div>
+    </section>
+    <section class="step wire" data-step="w3" data-from="45" data-to="48" data-at="0.46" data-group="3">
+      <div class="card">
+        <p class="grp"><span class="mono">กลุ่ม 3/6</span> ปุ่ม + สายวัดน้ำ</p>
+        <h2>ปุ่มสองปุ่มและสายวัดน้ำ ต่อเข้าสมองโดยตรง</h2>
+        <p class="sub">ปุ่มเขียวมีสายของตัวเอง น้ำจึงทำให้กลายเป็น "ปลอดภัย" เองไม่ได้</p>
+        <div class="flat-slot"></div>
+        <button type="button" class="btn-line flat-toggle">ดูผังแบบแบน</button>
+      </div>
+    </section>
+    <section class="step wire" data-step="w4" data-from="48" data-to="51" data-at="0.49" data-group="4">
+      <div class="card">
+        <p class="grp"><span class="mono">กลุ่ม 4/6</span> ไฟสถานะ</p>
+        <h2>สมองสั่งสีไฟแปดดวงด้วยสายเส้นเดียว</h2>
+        <div class="flat-slot"></div>
+        <button type="button" class="btn-line flat-toggle">ดูผังแบบแบน</button>
+      </div>
+    </section>
+    <section class="step wire" data-step="w5" data-from="51" data-to="53" data-at="0.52" data-group="5">
+      <div class="card">
+        <p class="grp"><span class="mono">กลุ่ม 5/6</span> เสียง</p>
+        <h2>สมองส่งเสียงพูด ตัวขยายทำให้ลำโพงดัง</h2>
+        <div class="flat-slot"></div>
+        <button type="button" class="btn-line flat-toggle">ดูผังแบบแบน</button>
+      </div>
+    </section>
+    <section class="step wire" data-step="w6" data-from="53" data-to="55" data-at="0.54" data-group="6">
+      <div class="card">
+        <p class="grp"><span class="mono">กลุ่ม 6/6</span> ไฟกะพริบ</p>
+        <h2>ดวงที่เก้าใช้สายเดิม หันออกนอกบ้านให้เรือเห็น</h2>
+        <div class="flat-slot"></div>
+        <button type="button" class="btn-line flat-toggle">ดูผังแบบแบน</button>
+      </div>
+    </section>
+
+    <!-- ฉาก 4 · ไฟ 4 สี + เสียง -->
+    <section class="step lights" data-step="4o" data-from="55" data-to="58.5" data-at="0.57" data-led="orange" data-say="เตือนภัยน้ำท่วม น้ำจะเข้าบ้านภายในพรุ่งนี้ ยกของขึ้นที่สูง พาคนป่วยขึ้นชั้นบน ได้ยินแล้วกดปุ่มเขียว" data-say-from="56.6">
+      <img class="still" src="img/v2-4o.png" alt="ภาพนิ่ง: ไฟรอบปุ่มแดงสีส้ม" loading="lazy">
+      <div class="card">
+        <h2>สีเดียว ความหมายเดียว</h2>
+        <ul class="colors" data-cur="orange"></ul>
+        <p class="sub">พูดซ้ำทุก <span class="nw">10 นาที</span>จนกว่าจะกด <span class="dv-tag">ค่าออกแบบ จะปรับหลังทดสอบ</span></p>
+      </div>
+    </section>
+    <section class="step lights" data-step="4g" data-from="58.5" data-to="60.5" data-at="0.59" data-led="green" data-say="ขอบคุณ ทีมรู้แล้วว่าบ้านนี้ได้ยิน">
+      <img class="still" src="img/v2-4g.png" alt="ภาพนิ่ง: ไฟรอบปุ่มแดงสีเขียว" loading="lazy">
+      <div class="card">
+        <h2>สีเดียว ความหมายเดียว</h2>
+        <ul class="colors" data-cur="green"></ul>
+      </div>
+    </section>
+    <section class="step lights" data-step="4r" data-from="60.5" data-to="62.5" data-at="0.61" data-led="red" data-say="ส่งขอความช่วยเหลือแล้ว รอสักครู่">
+      <img class="still" src="img/v2-4r.png" alt="ภาพนิ่ง: ไฟรอบปุ่มแดงสีแดง" loading="lazy">
+      <div class="card">
+        <h2>สีเดียว ความหมายเดียว</h2>
+        <ul class="colors" data-cur="red"></ul>
+      </div>
+    </section>
+    <section class="step lights" data-step="4y" data-from="62.5" data-to="65" data-at="0.63" data-led="yellow" data-say="ทีมรับเรื่องแล้ว เรือกำลังมา อยู่บนที่สูง อย่าลงน้ำ">
+      <img class="still" src="img/v2-4y.png" alt="ภาพนิ่ง: ไฟรอบปุ่มแดงสีเหลือง" loading="lazy">
+      <div class="card">
+        <h2>สีเดียว ความหมายเดียว</h2>
+        <ul class="colors" data-cur="yellow"></ul>
+        <p class="sub">น้ำไหลเชี่ยวลึกแค่ 6 นิ้ว (≈15 ซม.) พัดผู้ใหญ่ล้มได้
+          <span class="src">ที่มา: <a href="https://www.weather.gov/box/flood_safety" target="_blank" rel="noopener">US NWS</a></span></p>
+      </div>
+    </section>
+
+    <!-- ฉาก 5 · สามหน้าที่ ผ่านเรื่องสมมติ -->
+    <section class="step story" data-step="5a" data-from="65" data-to="69" data-at="0.68">
+      <img class="still" src="img/v2-5a.png" alt="ภาพนิ่ง: กล่องไฟส้ม ยังไม่มีใครกด" loading="lazy">
+      <div class="card">
+        <p class="fiction">เรื่องสมมติ</p>
+        <p class="who">ยายสมศรี อายุ 78 อยู่บ้านคนเดียวตอนกลางวัน ไม่มีสมาร์ตโฟน</p>
+        <p class="grp"><span class="mono">1/3</span> เตือน</p>
+        <h2>กล่องเตือนแล้ว ยายไม่ได้ยิน ทีมจึงรู้ว่าบ้านนี้ยังเงียบ</h2>
+        <p class="sub">ไม่กดใน <span class="nw">6 ชม.</span> = บ้านเงียบ <span class="dv-tag">ค่าออกแบบ จะปรับหลังทดสอบ</span> → อสม. มาเคาะประตูก่อนน้ำมา</p>
+      </div>
+    </section>
+    <section class="step story" data-step="5b" data-from="69" data-to="73" data-at="0.72">
+      <img class="still" src="img/v2-5b.png" alt="ภาพนิ่ง: กล่องไฟเหลือง ทีมรับเรื่องแล้ว" loading="lazy">
+      <div class="card">
+        <p class="fiction">เรื่องสมมติ</p>
+        <p class="who">ยายสมศรี อายุ 78 อยู่บ้านคนเดียวตอนกลางวัน ไม่มีสมาร์ตโฟน</p>
+        <p class="grp"><span class="mono">2/3</span> ขอช่วย</p>
+        <h2>น้ำเข้าบ้าน ยายกดแดง ไฟเหลืองบอกว่าเรือกำลังมา</h2>
+        <p class="sub">กดค้าง <span class="nw">2 วิ</span> <span class="dv-tag">ค่าออกแบบ จะปรับหลังทดสอบ</span> · ยายรู้ว่าต้องรอ ไม่ต้องลุยน้ำเอง · 1 บ้าน = 1 คำขอ</p>
+      </div>
+    </section>
+    <section class="step story" data-step="5c" data-from="73" data-to="77" data-at="0.76">
+      <img class="still" src="img/v2-5c.png" alt="ภาพนิ่ง: น้ำขึ้นถึงปลายสายวัดน้ำ กล่องไฟแดงเอง" loading="lazy">
+      <div class="card">
+        <p class="fiction">เรื่องสมมติ</p>
+        <p class="who">บ้านที่ลงทะเบียนว่ามีผู้ติดเตียง</p>
+        <p class="grp"><span class="mono">3/3</span> ขอแทน</p>
+        <h2>บ้านผู้ติดเตียงกดเองไม่ได้ กล่องขอความช่วยเหลือให้</h2>
+        <p class="sub">น้ำถึงสาย <span class="nw">50 ซม.</span> + ไม่มีใครตอบ <span class="nw">2 ชม.</span> <span class="dv-tag">ค่าออกแบบ จะปรับหลังทดสอบ</span> → ขึ้นลำดับแรก อสม. ยืนยันก่อนส่งเรือ</p>
+      </div>
+    </section>
+
+    <!-- ฉาก 6 · ต่างจากของเดิม -->
+    <section class="step wide2" data-step="6" data-from="77" data-to="85" data-at="0.83">
+      <div class="card">
+        <h2>ของเดิมส่งทางเดียวหรือต้องมีมือถือ กล่องนี้คุยสองทาง</h2>
+        <table class="cmp">
+          <thead><tr><th>ของเดิม</th><th>ยังขาด</th><th>กล่องนี้</th></tr></thead>
+          <tbody>
+            <tr data-show="77"><td>ข้อความเตือนเข้ามือถือ (Cell Broadcast) / หอกระจายข่าว <a class="src-a" href="https://www.bangkokbiznews.com/tech/ai/1209690" target="_blank" rel="noopener">ที่มา</a></td><td>ส่งได้ทางเดียว</td><td>มีการยืนยันกลับ รู้ว่าบ้านไหนยังไม่ได้ยิน</td></tr>
+            <tr data-show="78"><td>วิทยุรับข่าวภัยในบ้าน (ญี่ปุ่น) <a class="src-a" href="https://www.soumu.go.jp/main_content/000487220.pdf" target="_blank" rel="noopener">ที่มา</a></td><td>เคยมีสองทาง แต่ถูกเสนอตัดเพราะแพง</td><td>สองทางในราคา ≈ 657 บาท (ประมาณการ)</td></tr>
+            <tr data-show="79"><td>FMAS (มาเลเซีย) <a class="src-a" href="https://www.jamesdysonaward.org/en-MY/2025/project/flood-monitoring-alert-and-sos-system-fmas-1" target="_blank" rel="noopener">ที่มา</a></td><td>ไม่ได้บอกว่าคนขอได้อะไรกลับ</td><td>ไฟบอกสถานะ · 1 บ้าน 1 คำขอ · ขอแทน</td></tr>
+            <tr data-show="80"><td>Traffy Fondue และแอปตอนหาดใหญ่</td><td>ต้องใช้เน็ตและสมาร์ตโฟน</td><td>ไม่ต้องใช้ทั้งสองอย่าง</td></tr>
+          </tbody>
+        </table>
+        <p class="close" data-show="81">กล่องไม่ได้มาแทน อสม. แต่บอกว่าควรไปเคาะบ้านไหนก่อน</p>
+      </div>
+    </section>
+
+    <!-- ฉาก 7 · รอผลทดสอบ -->
+    <section class="step wide2" data-step="7" data-from="85" data-to="91" data-at="0.89">
+      <div class="card">
+        <h2>ของจริงทดสอบกับผู้สูงอายุ วันที่ 25 ต.ค.</h2>
+        <div class="waits">
+          <div class="wait"><b>บ้านเปราะบางกี่ % ยืนยันก่อนน้ำมา</b><span class="mono">รอผลทดสอบ 25 ต.ค.</span></div>
+          <div class="wait"><b>จากเตือนถึงกดเขียวใช้เวลาเท่าไร</b><span class="mono">รอผลทดสอบ 25 ต.ค.</span></div>
+          <div class="wait"><b>กี่ % อ่านความหมายสีไฟถูก</b><span class="mono">รอผลทดสอบ 25 ต.ค.</span></div>
+          <div class="wait"><b>คำขอซ้ำ (0 ตามการออกแบบ)</b><span class="mono">รอผลทดสอบ 25 ต.ค.</span></div>
+        </div>
+        <p class="small">ยังต้องลองของจริง: ไฟดวงที่ 9 สว่างพอให้เรือเห็นตอนกลางคืนไหม · เสียงได้ยินจากห้องอื่นไหม</p>
+      </div>
+    </section>
+
+    <!-- ฉาก 8 · ลองใช้กล่องเสมือน (ตัวคุมสถานะใช้ร่วมกันทั้งกล่อง 3D และกล่อง 2D สำรอง) -->
+    <section class="step" data-step="8" data-from="91" data-to="100" data-at="0.97">
+      <div class="card finale" id="try" data-scen="warn">
+        <div class="try-main">
+          <h2>ลองกดเองได้เลย แล้วไปดูหน้าจอทีมช่วยเหลือ</h2>
+          <div class="tabs" role="tablist" aria-label="เลือกเรื่อง">
+            <button type="button" role="tab" class="tab" data-scen="warn" aria-selected="true">เตือน</button>
+            <button type="button" role="tab" class="tab" data-scen="sos" aria-selected="false">ขอช่วย</button>
+            <button type="button" role="tab" class="tab" data-scen="auto" aria-selected="false">ขอแทน</button>
+          </div>
+          <p class="how" id="tryHow"></p>
+          <div class="water" id="tryWater" hidden>
+            <label for="waterRange">ระดับน้ำในบ้าน <b class="mono" id="waterVal">0 ซม.</b></label>
+            <input type="range" id="waterRange" min="0" max="60" step="1" value="0">
+            <p class="mark">ปลายสายวัดน้ำแขวนที่ <span class="nw">50 ซม.</span> <span class="dv-tag">ค่าออกแบบ จะปรับหลังทดสอบ</span></p>
+          </div>
+          <div class="holds">
+            <button type="button" class="hold hold-red" id="holdRed"><span class="hold-fill"></span><span class="hold-txt">กดค้างปุ่มแดง</span></button>
+            <button type="button" class="hold hold-green" id="holdGreen"><span class="hold-fill"></span><span class="hold-txt">กดปุ่มเขียว</span></button>
+          </div>
+          <p class="tip" id="tryTip" role="status" aria-live="polite"></p>
+          <div class="link" role="radiogroup" aria-labelledby="linkH">
+            <span class="link-h" id="linkH">สัญญาณวิทยุ</span>
+            <button type="button" role="radio" data-link="good" aria-checked="true">ดี</button>
+            <button type="button" role="radio" data-link="weak" aria-checked="false">อ่อน</button>
+            <button type="button" role="radio" data-link="down" aria-checked="false">ขาด</button>
+          </div>
+          <p class="link-how" id="linkHow"></p>
+          <div class="mapinfo mapinfo-m" id="mapInfoM"></div>
+          <div class="try-row">
+            <button type="button" class="btn-line only3d" id="tryFront">หันหน้าตรง</button>
+            <button type="button" class="btn-line only3d" id="tryRx">ดูตัวรับ</button>
+            <button type="button" class="btn-line" id="tryReset">เริ่มใหม่</button>
+            <button type="button" class="btn-line mute" id="tryMute" aria-pressed="false" aria-label="ปิดเสียง"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M16 9l6 6M22 9l-6 6"/></svg></button>
+          </div>
+          <a class="cta" href="../dashboard/">ดูหน้าจอทีมช่วยเหลือ</a>
+        </div>
+        <!-- กล่อง 2D สำรอง (เครื่องที่เปิด 3D ไม่ได้ / ตั้งค่าลดการเคลื่อนไหว) กดได้ลำดับเดียวกัน -->
+        <div class="box2d" id="box2d">
+          <svg class="b2" viewBox="-100 -100 200 282" aria-hidden="true">
+            <line class="b2-floor" x1="-100" y1="180" x2="100" y2="180"/>
+            <rect class="b2-water" id="b2Water" x="-100" y="180" width="200" height="0"/>
+            <line class="b2-probe" x1="-55" y1="75" x2="-57" y2="118"/>
+            <line class="b2-probe red" x1="-52" y1="75" x2="-53" y2="118"/>
+            <line class="b2-lvl" id="b2Lvl" x1="-92" y1="118" x2="92" y2="118"/>
+            <text class="b2-lvt" x="-88" y="113">50 ซม.</text>
+            <rect class="b2-body" x="-75" y="-75" width="150" height="150" rx="8"/>
+            <rect class="b2-l9" id="b2L9" x="74" y="-2" width="5" height="10" rx="1.5"/>
+            <circle class="b2-glow" id="b2Glow" cx="-25" cy="0" r="56"/>
+            <g class="b2-leds" id="b2Leds"></g>
+            <circle class="b2-red" id="b2Red" cx="-25" cy="0" r="27"/>
+            <circle class="b2-green" id="b2Green" cx="47" cy="10" r="20"/>
+            <circle class="b2-prog" id="b2Prog" cx="-25" cy="0" r="33" pathLength="100"/>
+          </svg>
+          <p class="b2-bubble" id="b2Bubble"></p>
+          <!-- ภาพนิ่งแผนที่สัญญาณ (เครื่องที่เปิด 3D ไม่ได้ / ลดการเคลื่อนไหว) -->
+          <figure class="mapcard">
+            <img class="mapstill" src="img/v2-8map.png" alt="ภาพนิ่ง: แผนที่ชุมชนจำลอง บ้านในเรื่องห่างจากอาคาร อบต. ที่ตั้งตัวรับ ประมาณ 0.8 กม. มีวงรัศมี 1 กม. รอบเสาตัวรับ" loading="lazy">
+            <figcaption class="mapinfo" id="mapInfo2d"></figcaption>
+          </figure>
+        </div>
+        <div class="side">
+          <div class="screen" id="screen">
+            <p class="scr-h">จอทีมช่วยเหลือ (จำลอง)</p>
+            <p class="scr-clock" id="scrClock" hidden></p>
+            <div class="scr-body" id="scrBody"></div>
+            <div class="scr-act" id="scrAct"></div>
+            <p class="scr-note" id="scrNote" role="status" aria-live="polite"></p>
+          </div>
+          <details class="serial" id="serial" open>
+            <summary>จอของตัวรับ <span class="mono">Serial</span> <span class="ser-n mono" id="serN"></span></summary>
+            <p class="ser-h">ข้อความจริงทางสาย USB เป็น JSON ตาม data-contract ข้อ 5</p>
+            <ol class="ser-log mono" id="serLog" aria-live="polite"></ol>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <p class="hint" id="hint">เลื่อนลงเพื่อแยกชิ้นกล่อง</p>
+
+  <noscript><style>.step .card{position:static;opacity:1;visibility:visible;transform:none}.step{height:auto}#badges,#legend,.flat-toggle,.finale{display:none}</style></noscript>
+  <script type="module" src="scroll.js"></script>
+</body>
+</html>

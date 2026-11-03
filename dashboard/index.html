@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ปุ่มเรียกเรือ - ศูนย์ประสานงานช่วยเหลือ</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="banner" class="banner" role="alert" hidden></div>
+<div id="liveBar" class="livebar" role="status" hidden><span id="liveMsg"></span><button id="connectBtn" class="btn primary" type="button">เชื่อมต่อตัวรับ (สาย USB)</button></div>
+
+<header class="top">
+  <h1>ปุ่มเรียกเรือ</h1>
+  <nav class="tabs" role="tablist" aria-label="หน้า">
+    <button role="tab" data-view="map" aria-selected="true">แผนที่</button>
+    <button role="tab" data-view="sender" aria-selected="false">ส่งคำเตือน</button>
+    <button role="tab" data-view="about" aria-selected="false">ที่มาตัวเลข</button>
+  </nav>
+  <div class="top-right">
+    <span id="speedNote" class="speed-note" hidden>เดโมเร่งเวลา · 1 วิ = 1 ชม.</span>
+    <button id="modePill" class="pill" type="button" aria-live="polite"></button>
+    <button id="presentBtn" class="btn ghost" type="button" aria-pressed="false">โหมดพรีเซนต์</button>
+  </div>
+</header>
+
+<main>
+  <!-- หน้าแผนที่ -->
+  <section id="view-map" class="view">
+    <div class="pane-left">
+      <div class="mapbox">
+        <div class="map-head">
+          <h2>แผนที่ชุมชน <span class="muted">บ้านละ 1 หมุด</span></h2>
+          <ul id="legend" class="legend" aria-label="ความหมายของหมุด"></ul>
+        </div>
+        <svg id="map" viewBox="0 0 800 480" role="group" aria-label="แผนที่ชุมชน"></svg>
+        <div id="cb" class="cb" hidden>
+          <svg class="phone" viewBox="0 0 120 200" aria-hidden="true">
+            <rect x="6" y="4" width="108" height="192" rx="14" fill="#fff" stroke="#9C9A92" stroke-width="2"/>
+            <rect x="14" y="26" width="92" height="148" fill="#F3F2EE"/>
+            <rect x="46" y="12" width="28" height="4" rx="2" fill="#DAD8D0"/>
+            <rect x="20" y="40" width="80" height="54" fill="#fff" stroke="#9C9A92"/>
+            <rect x="26" y="48" width="44" height="5" fill="#1F1F1D"/>
+            <rect x="26" y="60" width="68" height="4" fill="#9C9A92"/>
+            <rect x="26" y="69" width="60" height="4" fill="#9C9A92"/>
+            <rect x="26" y="78" width="40" height="4" fill="#9C9A92"/>
+          </svg>
+          <div class="cb-text">
+            <p class="cb-h">ข้อความเตือนภัยทางมือถือ (Cell Broadcast) เข้ามาแล้ว</p>
+            <p>แต่มือถือเครื่องนี้เป็นของยายสมศรี <b>(เรื่องสมมติ)</b> ยายไม่ได้ใช้ ข้อความจึงไม่มีใครอ่าน</p>
+          </div>
+        </div>
+      </div>
+      <div id="boxpane" class="boxpane"></div>
+    </div>
+
+    <div class="pane-right">
+      <div id="sit" class="sit"></div>
+      <div id="queue" class="list-sec"></div>
+      <div id="silent" class="list-sec"></div>
+    </div>
+  </section>
+
+  <!-- หน้าผู้ส่งคำเตือน -->
+  <section id="view-sender" class="view" hidden>
+    <div class="sender">
+      <form id="warnForm" class="wf" autocomplete="off">
+        <h2>ส่งคำเตือนน้ำท่วม</h2>
+        <p class="muted">ตัวอย่างหน้าจอของเจ้าหน้าที่ อปท. / ปภ. เลือกพื้นที่และเวลา แล้วกล่องที่บ้านจะพูดคำเตือนเอง</p>
+
+        <label class="fld" for="area">พื้นที่</label>
+        <select id="area">
+          <option value="all">ทุกบ้านในชุมชน</option>
+          <option value="north">บ้านฝั่งเหนือถนน</option>
+          <option value="canal">บ้านริมคลอง</option>
+        </select>
+        <p id="areaNote" class="note" hidden>ตัวรับส่งคำเตือนให้ทุกบ้านที่ลงทะเบียน เลือกเฉพาะพื้นที่ไม่ได้</p>
+
+        <fieldset class="fld">
+          <legend>น้ำจะเข้าบ้านภายใน</legend>
+          <div class="seg">
+            <label><input type="radio" name="when" value="today"><span>วันนี้</span></label>
+            <label><input type="radio" name="when" value="tonight"><span>คืนนี้</span></label>
+            <label><input type="radio" name="when" value="tomorrow" checked><span>พรุ่งนี้</span></label>
+          </div>
+        </fieldset>
+
+        <label class="fld" for="lvl">ระดับน้ำที่คาด (ซม.) <span class="muted">ไม่ต้องกรอกก็ได้</span></label>
+        <input id="lvl" type="number" min="0" max="2540" inputmode="numeric" placeholder="เว้นว่างถ้ายังไม่ทราบ">
+        <p class="note">กล่องไม่พูดตัวเลขนี้ ใช้แสดงบนหน้าเว็บเท่านั้น</p>
+
+        <div class="say-prev">
+          <span class="say-h">กล่องจะพูดว่า</span>
+          <q id="warnPreview"></q>
+        </div>
+
+        <div class="row">
+          <button id="sendWarn" class="btn primary big" type="submit">ส่งคำเตือน</button>
+          <button id="stopWarn" class="btn" type="button">หยุดส่งซ้ำ</button>
+        </div>
+        <p class="note">ตัวรับส่งซ้ำ 3 ครั้งห่างกัน 30 วินาที แล้วส่งซ้ำทุก 15 นาทีจนกว่าจะกดหยุด · กล่องพูดซ้ำทุก 10 นาทีจนกว่าจะมีคนกดเขียว<br><span class="design">ค่าออกแบบ จะปรับหลังทดสอบ</span></p>
+        <p id="cmdMsg" class="err" role="status" aria-live="polite"></p>
+      </form>
+
+      <div id="sendResult" class="sr"></div>
+    </div>
+  </section>
+
+  <!-- หน้าที่มา -->
+  <section id="view-about" class="view" hidden>
+    <div class="about">
+      <div class="ab-col">
+        <h2>ทำไมต้องมีกล่องนี้</h2>
+        <ul class="src">
+          <li><p>น้ำท่วมภาคใต้ เดือนพฤศจิกายน 2568 มีผู้เสียชีวิต 162 คน ชาวบ้านบอกว่าไม่มีใครมา 3-4 วัน</p>
+            <a href="https://www.thaipbs.or.th/news/content/358938" target="_blank" rel="noopener">ไทยพีบีเอส</a></li>
+          <li><p>ส่งข้อความเตือนทางมือถือ (Cell Broadcast) หลายรอบ แต่คนไม่รู้หรือรู้ช้า มีคำขอซ้ำ และผู้สูงอายุที่ไม่มีมือถือหายไปจากแผนที่ขอความช่วยเหลือ</p>
+            <a href="https://www.bangkokbiznews.com/tech/ai/1209690" target="_blank" rel="noopener">กรุงเทพธุรกิจ</a></li>
+          <li><p>ผู้สูงอายุ 60 ปีขึ้นไปใช้อินเทอร์เน็ต 67.3% (ราว 1 ใน 3 ไม่ใช้)</p>
+            <a href="https://www.nso.go.th/nsoweb/storage/survey_detail/2025/20250228090924_27941.pdf" target="_blank" rel="noopener">สำนักงานสถิติแห่งชาติ</a></li>
+          <li><p>6 ตุลาคม 2569 น้ำท่วม 27 จังหวัด กระทบ 3,143,962 คน</p>
+            <a href="https://www.bangkokbiznews.com/news/1255230" target="_blank" rel="noopener">กรุงเทพธุรกิจ</a></li>
+          <li><p>วิทยุรับข่าวภัยในบ้านที่ญี่ปุ่น เคยมีแบบสองทาง แต่ถูกเสนอให้ตัดเพราะราคาแพง</p>
+            <a href="https://www.soumu.go.jp/main_content/000487220.pdf" target="_blank" rel="noopener">กระทรวงมหาดไทยและการสื่อสารของญี่ปุ่น (PDF)</a></li>
+          <li><p>น้ำไหลเชี่ยวลึกแค่ 6 นิ้ว (ราว 15 ซม.) พัดผู้ใหญ่ล้มได้ นี่คือเหตุผลของประโยค &quot;อย่าลงน้ำ&quot;</p>
+            <a href="https://www.weather.gov/box/flood_safety" target="_blank" rel="noopener">US National Weather Service</a></li>
+          <li><p>FMAS (มาเลเซีย) ไม่ได้บอกว่าคนที่ขอความช่วยเหลือจะได้อะไรกลับมา</p>
+            <a href="https://www.jamesdysonaward.org/en-MY/2025/project/flood-monitoring-alert-and-sos-system-fmas-1" target="_blank" rel="noopener">James Dyson Award</a></li>
+          <li><p>งานวิจัยที่ใช้อ้างอิงการเขียนคำเตือน: ผลของคำเตือนที่บอกผลกระทบและบอกสิ่งที่ควรทำ (Weyrich และคณะ 2018)</p>
+            <a href="https://www.research-collection.ethz.ch/handle/20.500.11850/404058" target="_blank" rel="noopener">ETH Zurich</a></li>
+        </ul>
+      </div>
+
+      <div class="ab-col">
+        <h2>ผลทดสอบ</h2>
+        <ul class="tests">
+          <li><p>บ้านเปราะบางที่ยืนยันก่อนน้ำมา (ร้อยละ)</p><span class="empty">รอผลทดสอบ 25 ต.ค.</span></li>
+          <li><p>เวลาจากส่งคำเตือนถึงกดยืนยัน</p><span class="empty">รอผลทดสอบ 25 ต.ค.</span></li>
+          <li><p>คนที่อ่านความหมายของไฟถูก (ร้อยละ)</p><span class="empty">รอผลทดสอบ 25 ต.ค.</span></li>
+          <li><p>คำขอซ้ำ ออกแบบให้เป็น 0 (บ้านละ 1 รายการ)</p><span class="empty">รอผลทดสอบ 25 ต.ค.</span></li>
+        </ul>
+
+        <h2 class="gap">ค่าที่ออกแบบเอง</h2>
+        <ul class="dvals">
+          <li>กดปุ่มแดงค้าง <b id="dv-hold">2</b> วินาที = ขอความช่วยเหลือ</li>
+          <li>ไม่กดเขียวใน <b id="dv-silent">6</b> ชั่วโมง = บ้านเงียบ</li>
+          <li>บ้านติดเตียง น้ำถึงสายวัด (<b id="dv-probe">50</b> ซม.) และไม่มีใครกด <b id="dv-auto">2</b> ชั่วโมง = กล่องขอแทน</li>
+          <li>กล่องพูดคำเตือนซ้ำทุก <b id="dv-repeat">10</b> นาที</li>
+          <li>ถ่านอ่อนเมื่อต่ำกว่า <b id="dv-batt">3.9</b> โวลต์ (ถ่าน 3 ก้อน)</li>
+          <li>ไม่ได้ยินกล่องเกิน <b id="dv-stale">13</b> ชั่วโมง = ขาดการติดต่อ</li>
+          <li>ราคากล่องรุ่นชาวบ้าน ประมาณ 657 บาท · ตัวรับ ประมาณ 505 บาท + พาวเวอร์แบงก์ (ประมาณการ)</li>
+        </ul>
+        <p class="design">ค่าออกแบบ จะปรับหลังทดสอบ</p>
+        <p class="note">ชื่อบ้าน ตำแหน่ง และค่าสัญญาณในแผนที่เป็นข้อมูลสมมติทั้งหมด</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- แผงควบคุมเดโม (เฉพาะโหมดพรีเซนต์) -->
+<div id="presenter" class="presenter" hidden>
+  <div class="pr-group">
+    <button id="prPlay" class="btn primary" type="button">เล่นเดโม 60 วิ</button>
+    <button id="prPause" class="btn" type="button">หยุด</button>
+    <span class="pr-t" id="prTime" aria-live="off"></span>
+  </div>
+  <div class="pr-group" role="group" aria-label="กระโดดไปที่">
+    <span class="pr-l">ไปที่วินาที</span>
+    <button class="btn chip" type="button" data-jump="0">0</button>
+    <button class="btn chip" type="button" data-jump="15">15</button>
+    <button class="btn chip" type="button" data-jump="30">30</button>
+    <button class="btn chip" type="button" data-jump="45">45</button>
+    <button class="btn chip" type="button" data-jump="60">60</button>
+  </div>
+  <div class="pr-group" role="group" aria-label="ทดลองกับบ้านที่เลือก">
+    <span class="pr-l" id="prSel">บ้านที่เลือก</span>
+    <button class="btn" type="button" data-try="green">กดเขียว</button>
+    <button class="btn" type="button" data-try="red">กดแดงค้าง</button>
+    <button class="btn" type="button" data-try="wet">น้ำถึงสายวัด</button>
+    <button class="btn" type="button" data-try="batt">ถ่านอ่อน</button>
+    <button class="btn" type="button" data-try="safe">กดเขียวค้าง (ปลอดภัย)</button>
+    <button class="btn" type="button" data-try="off">กล่องขาดการติดต่อ</button>
+  </div>
+  <div class="pr-group">
+    <button id="prSound" class="btn" type="button" aria-pressed="false">เสียง: ปิด</button>
+  </div>
+  <p id="prCap" class="pr-cap"></p>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

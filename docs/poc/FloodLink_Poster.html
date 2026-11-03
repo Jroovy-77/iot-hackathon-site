@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>FloodLink — Poster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  @page { size: 297mm 420mm; margin: 0; }
+  :root {
+    --paper: #F3F2EE; --white: #FFFFFF; --grid: #E2E0D8; --rule: #9C9A92; --ink: #1F1F1D; --ink2: #5F5E5A;
+    --warn: #E0701A; --ok: #2F8A3E; --sos: #D23B30; --acc: #E8B400;
+    --sans: "IBM Plex Sans Thai", "Leelawadee UI", Tahoma, sans-serif;
+    --mono: "IBM Plex Mono", Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { background: var(--paper); }
+  body { width: 297mm; height: 420mm; font-family: var(--sans); color: var(--ink); overflow: hidden; }
+  .sheet {
+    position: relative; width: 297mm; height: 420mm; padding: 14mm 14mm 0;
+    background-color: var(--paper);
+    background-image: linear-gradient(var(--grid) 0.25mm, transparent 0.25mm), linear-gradient(90deg, var(--grid) 0.25mm, transparent 0.25mm);
+    background-size: 10mm 10mm; background-position: 14mm 14mm;
+  }
+  .frame { position: absolute; inset: 8mm; border: 0.5mm solid var(--ink); pointer-events: none; }
+  .frame::after { content: ""; position: absolute; inset: 1.6mm; border: 0.2mm solid var(--rule); }
+
+  .mono { font-family: var(--mono); }
+  .note { font-family: var(--mono); font-size: 7.6pt; color: var(--ink2); letter-spacing: 0.01em; }
+
+  /* หัว */
+  header { display: grid; grid-template-columns: 1fr 86mm; gap: 8mm; align-items: end; padding: 3mm 3mm 5mm; border-bottom: 0.4mm solid var(--ink); }
+  h1 { font-size: 58pt; font-weight: 700; line-height: 0.95; letter-spacing: -0.03em; }
+  .lede { font-size: 17pt; font-weight: 500; line-height: 1.35; margin-top: 4mm; max-width: 165mm; }
+  .lede b { font-weight: 700; }
+  .quote { font-size: 12.5pt; line-height: 1.5; color: var(--ink2); border-top: 0.2mm solid var(--rule); padding-top: 3mm; }
+  .quote b { color: var(--ink); font-weight: 600; }
+
+  /* ปัญหา */
+  .problem { display: grid; grid-template-columns: 1.15fr 1fr 1fr; padding: 4mm 3mm; border-bottom: 0.2mm solid var(--rule); background: var(--paper); }
+  .fact { padding: 0 6mm; border-left: 0.2mm solid var(--rule); }
+  .fact:first-child { padding-left: 0; border-left: 0; }
+  .fact p { font-size: 11.5pt; line-height: 1.45; }
+  .fact .big { font-size: 30pt; font-weight: 700; line-height: 1; letter-spacing: -0.02em; display: block; margin-bottom: 2mm; }
+  .fact .note { display: block; margin-top: 2mm; }
+
+  /* กล่อง */
+  .device { display: grid; grid-template-columns: 96mm 1fr; gap: 9mm; padding: 5mm 3mm 7mm; align-items: start; border-bottom: 0.2mm solid var(--rule); }
+  .view { position: relative; background: var(--white); border: 0.2mm solid var(--rule); }
+  .view img { display: block; width: 100%; height: auto; }
+  .view .cap { position: absolute; left: 0; bottom: -6mm; }
+  .ball { position: absolute; transform: translate(-50%, -50%); width: 7mm; height: 7mm; border-radius: 50%; background: var(--white); border: 0.4mm solid var(--ink); font-family: var(--mono); font-size: 10pt; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+  .legend { margin-top: 5mm; }
+  .legend td { font-size: 10.5pt; padding: 1.2mm 0; }
+  .legend td:first-child { width: 10mm; font-weight: 400; }
+  .legend .ball { position: static; transform: none; width: 6mm; height: 6mm; font-size: 9pt; }
+  .callout { position: absolute; display: flex; align-items: center; gap: 0; white-space: nowrap; }
+  .callout i { display: block; width: 2.2mm; height: 2.2mm; border-radius: 50%; border: 0.4mm solid var(--ink); background: var(--white); flex: none; }
+  .callout s { display: block; height: 0.25mm; background: var(--ink); flex: none; }
+  .callout span { background: var(--white); border: 0.25mm solid var(--ink); padding: 1mm 2mm; font-size: 9.5pt; line-height: 1.25; }
+  .callout span b { display: block; font-weight: 700; font-size: 10.5pt; }
+
+  h2 { font-size: 19pt; font-weight: 700; letter-spacing: -0.01em; line-height: 1.15; margin-bottom: 2.2mm; }
+  .steps { display: grid; gap: 3.5mm; }
+  .step { display: grid; grid-template-columns: 30mm 1fr; gap: 4mm; align-items: start; padding-bottom: 3.5mm; border-bottom: 0.2mm solid var(--rule); }
+  .step:last-child { border-bottom: 0; }
+  .step h3 { font-size: 12.5pt; font-weight: 700; line-height: 1.3; }
+  .step p { font-size: 11pt; line-height: 1.5; }
+  .lamp { display: inline-flex; align-items: center; gap: 1.6mm; font-family: var(--mono); font-size: 8.5pt; color: var(--ink2); margin-top: 1.5mm; }
+  .lamp em { display: inline-block; width: 3.4mm; height: 3.4mm; border-radius: 50%; border: 0.25mm solid var(--ink); }
+  .arrow { color: var(--ink2); }
+
+  /* ทั้งปี + ตัวรับ */
+  .yearround { display: grid; grid-template-columns: 1fr 92mm; gap: 8mm; padding: 3mm 3mm 5mm; border-bottom: 0.2mm solid var(--rule); align-items: center; }
+  .yearround .say { font-size: 20pt; font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; }
+  .yearround .say u { text-decoration: none; border-bottom: 0.8mm solid var(--ink); }
+  .yearround p.sub { font-size: 12pt; line-height: 1.55; margin-top: 3mm; color: var(--ink); }
+
+  /* ตลาด + ทำได้จริง */
+  .bottom { display: grid; grid-template-columns: 1.5fr 1fr; gap: 8mm; padding: 6mm 3mm 0; }
+  table { width: 100%; border-collapse: collapse; }
+  td { padding: 1.05mm 0; border-top: 0.2mm solid var(--rule); vertical-align: top; font-size: 11pt; line-height: 1.45; }
+  td:first-child { width: 52mm; font-weight: 700; padding-right: 4mm; }
+  tr:last-child td { border-bottom: 0.2mm solid var(--rule); }
+  .spec td:first-child { font-weight: 500; color: var(--ink2); width: 38mm; }
+  .spec td:last-child { font-weight: 600; }
+  .pending { display: inline-block; border: 0.25mm dashed var(--ink2); padding: 0 2mm; font-family: var(--mono); font-size: 9pt; color: var(--ink2); }
+
+  /* กรอบชื่อแบบ */
+  .titleblock { position: absolute; left: 14mm; right: 14mm; bottom: 12mm; display: grid; grid-template-columns: 1.4fr 1fr 1fr 0.7fr; border: 0.4mm solid var(--ink); background: var(--white); }
+  .titleblock div { padding: 1.4mm 3mm; border-left: 0.2mm solid var(--ink); }
+  .titleblock div:first-child { border-left: 0; }
+  .titleblock .k { font-family: var(--mono); font-size: 7pt; color: var(--ink2); display: block; text-transform: uppercase; letter-spacing: 0.06em; }
+  .titleblock .v { font-size: 9.5pt; font-weight: 600; line-height: 1.3; }
+
+  /* ---- สี: น้ำยามค่ำ (หัว) + ฟ้าน้ำ (แถบทั้งปี) · สีสถานะยังใช้กับสถานะเท่านั้น */
+  :root { --navy: #12304A; --navy2: #1D4A6E; --water: #2F7BB5; --mist: #E1ECF4; --mist2: #C9DCEA; --sand: #F7F1E6; }
+  header { background: var(--navy); color: #F4F7FA; margin: 0 -3mm; padding: 5mm 6mm 10mm !important; position: relative; border-bottom: 0 !important;
+    background-image: linear-gradient(rgba(255,255,255,0.06) 0.25mm, transparent 0.25mm), linear-gradient(90deg, rgba(255,255,255,0.06) 0.25mm, transparent 0.25mm); background-size: 10mm 10mm; }
+  header h1 { color: #FFFFFF; }
+  header h1 span { color: #8EC3EA; }
+  header .lede b { color: #FFFFFF; box-shadow: inset 0 -2.2mm 0 rgba(47,123,181,0.55); }
+  header .quote { color: #A9C4DA; border-top-color: rgba(255,255,255,0.25); }
+  header .quote b { color: #FFFFFF; }
+  header svg.wave { position: absolute; left: 0; right: 0; bottom: -0.2mm; width: 100%; height: 8mm; display: block; }
+  .problem { background: transparent; }
+  .fact .big { color: var(--navy2); }
+  .fact:first-child .big { color: var(--navy); }
+  .step h3 { display: flex; align-items: center; gap: 2mm; }
+  .step h3 em { width: 3.2mm; height: 3.2mm; border-radius: 50%; flex: none; border: 0.25mm solid var(--ink); }
+  .view { border-color: var(--navy2); box-shadow: 0 1.2mm 3mm rgba(18,48,74,0.18); }
+  .ball { background: #FFFFFF; border-color: var(--navy); color: var(--navy); }
+  .legend .ball { background: var(--navy); color: #FFFFFF; }
+  h2 { color: var(--navy); }
+  h2::after { content: ""; display: block; width: 14mm; height: 0.8mm; background: var(--water); margin-top: 1mm; }
+  .device { border-bottom: 0 !important; }
+  .yearround { background: var(--mist); margin: 0 -3mm; padding-left: 6mm !important; padding-right: 6mm !important; border-bottom: 0 !important; position: relative; }
+  .yearround .say { color: var(--navy); }
+  .yearround .say u { border-bottom-color: var(--water); }
+  .bottom td:first-child { color: var(--navy); }
+  .spec td:first-child { color: var(--ink2) !important; }
+  .titleblock div:first-child { background: var(--navy); color: #FFFFFF; }
+  .titleblock div:first-child .k { color: #A9C4DA; }
+
+  /* ---- สีเพิ่ม รอบ 3 */
+  .problem { background: var(--sand) !important; margin: 0 -3mm; padding-left: 6mm !important; padding-right: 6mm !important; border-bottom: 0 !important; }
+  .fact .big { color: var(--navy) !important; }
+  .fact:nth-child(2) .big { color: var(--water) !important; }
+  .fact:nth-child(3) .big { color: var(--navy2) !important; }
+  .step { border-bottom: 0 !important; padding: 2.4mm 3mm !important; border-radius: 1.5mm; }
+  .step.s-warn { background: #FBEBDD; }
+  .step.s-sos { background: #F8E1DF; }
+  .step.s-auto { background: #F3E6EC; }
+  .steps { gap: 2.2mm !important; }
+  .legend td { border-top-color: var(--mist2) !important; }
+  .bottom { margin: 0 -3mm; padding-left: 6mm !important; padding-right: 3mm !important; }
+  .bottom > div:first-child tr:first-child td { background: var(--mist); }
+  .bottom > div:first-child tr:first-child td:first-child { box-shadow: inset 1mm 0 0 var(--water); padding-left: 3mm; }
+  .bottom > div:first-child td:first-child { color: var(--navy); }
+  .bottom > div:last-child { background: var(--navy); color: #EAF2F8; padding: 4mm 5mm 3mm; border-radius: 2mm; align-self: start; }
+  .bottom > div:last-child h2 { color: #FFFFFF; }
+  .bottom > div:last-child h2::after { background: #8EC3EA; }
+  .spec td { border-top-color: rgba(255,255,255,0.18) !important; }
+  .spec tr:last-child td { border-bottom-color: rgba(255,255,255,0.18) !important; }
+  .spec td:first-child { color: #A9C4DA !important; }
+  .spec td:last-child { color: #FFFFFF; }
+  .spec .note { color: #A9C4DA; }
+  .spec .pending { color: #FFFFFF; border-color: #8EC3EA; }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="frame"></div>
+
+  <header>
+    <div>
+      <h1>Flood<span>Link</span></h1>
+      <p class="lede">กล่องติดบ้านที่<b>คุยกับทีมช่วยเหลือได้สองทาง</b><br>ไม่ต้องใช้เน็ต ไม่ต้องใช้มือถือ ใช้ได้แม้ไฟดับ เสามือถือล่ม</p>
+    </div>
+    <p class="quote">ในวันที่ทุกอย่างล่ม<br><b>คนที่เปราะบางที่สุด ต้องเป็นคนแรกที่ถูกได้ยิน</b></p>
+    <svg class="wave" viewBox="0 0 1000 40" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 22 C 60 10, 120 10, 180 22 S 300 34, 360 22 S 480 10, 540 22 S 660 34, 720 22 S 840 10, 900 22 S 980 30, 1000 26 L1000 40 L0 40 Z" fill="#2F7BB5" opacity="0.45"/>
+      <path d="M0 28 C 70 18, 130 18, 200 28 S 330 38, 400 28 S 530 18, 600 28 S 730 38, 800 28 S 930 20, 1000 28 L1000 40 L0 40 Z" fill="#F3F2EE"/>
+    </svg>
+  </header>
+
+  <section class="problem">
+    <div class="fact">
+      <p><span class="big">162 คน</span>เสียชีวิตในน้ำท่วมภาคใต้ พ.ย. 2568 ชาวบ้านหลายบ้านบอกว่าไม่มีใครมาเลย 3–4 วัน</p>
+      <span class="note">ที่มา: Thai PBS</span>
+    </div>
+    <div class="fact">
+      <p><span class="big">1 ใน 3</span>ของผู้สูงอายุไทยไม่ใช้อินเทอร์เน็ต ข้อความเตือนในมือถือจึงไปไม่ถึง</p>
+      <span class="note">ที่มา: สำนักงานสถิติแห่งชาติ (ใช้ 67.3%)</span>
+    </div>
+    <div class="fact">
+      <p><span class="big">ไม่มีเสียง</span>ผู้สูงอายุที่ไม่มีมือถือหายไปจากแผนที่ขอความช่วยเหลือ เตือนแล้วก็ไม่รู้ว่าใครได้ยิน</p>
+      <span class="note">ที่มา: กรุงเทพธุรกิจ</span>
+    </div>
+  </section>
+
+  <section class="device">
+    <figure class="view">
+      <img src="housebox.png" alt="กล่องบ้าน FloodLink">
+      <b class="ball" style="left:19%; top:18.5%">1</b>
+      <b class="ball" style="left:24%; top:31%">2</b>
+      <b class="ball" style="left:49%; top:36.5%">3</b>
+      <b class="ball" style="left:75%; top:20%">4</b>
+      <p class="note cap">มุมมอง ก — กล่องบ้าน ติดผนังชั้นบน (ภาพจำลอง 3 มิติ แบบกล่องจริงรุ่นถัดไป)</p>
+    </figure>
+
+    <div>
+      <h2>กล่องเดียว ทำ 3 อย่าง</h2>
+      <div class="steps">
+        <div class="step s-warn">
+          <h3><em style="background:var(--warn)"></em>ก่อนน้ำมา</h3>
+          <div>
+            <p>กล่องแจ้งเตือน คนในบ้านกดตอบรับ ทีมรู้ทันทีว่า<b>บ้านไหนยังเงียบ</b> ต้องไปเคาะประตู</p>
+            <span class="lamp"><em style="background:var(--warn)"></em>ส้ม = เตือน <span class="arrow">→</span> <em style="background:var(--ok)"></em>เขียว = ได้ยินแล้ว</span>
+          </div>
+        </div>
+        <div class="step s-sos">
+          <h3><em style="background:var(--sos)"></em>ตอนติดอยู่</h3>
+          <div>
+            <p>กดปุ่มเดียว ทีมเห็นทันทีว่าบ้านไหน ใครอยู่ เมื่อทีมรับเรื่อง กล่องบอกคนในบ้านว่า<b> "ทีมกำลังมา อย่าลงน้ำ"</b></p>
+            <span class="lamp"><em style="background:var(--sos)"></em>แดง = ขอช่วย <span class="arrow">→</span> <em style="background:var(--acc)"></em>เหลือง = รับเรื่องแล้ว</span>
+          </div>
+        </div>
+        <div class="step s-auto">
+          <h3><em style="background:var(--sos)"></em>ไม่มีใครกด</h3>
+          <div>
+            <p>บ้านผู้ป่วยติดเตียงมีสายวัดน้ำ ถ้าน้ำเข้าบ้านแล้วไม่มีใครกด <b>กล่องขอความช่วยเหลือให้เอง</b> อสม. ยืนยันก่อนส่งเรือ</p>
+            <span class="lamp"><em style="background:var(--sos)"></em>แดง = กล่องขอแทน</span>
+          </div>
+        </div>
+      </div>
+      <table class="legend">
+        <tr><td><b class="ball">1</b></td><td>แหวนไฟ 12 ดวง — บอกสถานะด้วยสี</td></tr>
+        <tr><td><b class="ball">2</b></td><td>ปุ่มแดง — กดค้าง 2 วิ = ขอความช่วยเหลือ</td></tr>
+        <tr><td><b class="ball">3</b></td><td>ปุ่มเขียว — กด = ได้ยินแล้ว · กดค้าง = ปลอดภัย</td></tr>
+        <tr><td><b class="ball">4</b></td><td>ลำโพง — บอกคนในบ้านว่าเกิดอะไรขึ้น</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section class="yearround">
+    <div>
+      <p class="say">ไม่ได้รอแค่วันน้ำท่วม<br>ล้มในบ้าน <u>กดปุ่มเดียว</u> ทีมเห็นบ้านเลขที่ทันที</p>
+      <p class="sub">ไม่ต้องพูด ไม่ต้องโทร — ข้อมูลบ้านและคนในบ้านลงทะเบียนไว้ตอน อสม. ติดตั้ง<br>เหมือนถังดับเพลิง: ติดไว้ทั้งปี วันที่ต้องใช้ ต้องใช้ได้</p>
+    </div>
+    <figure class="view">
+      <img src="receiver.png" alt="ตัวรับต่อโน้ตบุ๊ก">
+      <p class="note cap">มุมมอง ข — ตัวรับที่ อบต. ต่อโน้ตบุ๊กด้วยสาย USB · จอทีมช่วยเหลือ</p>
+    </figure>
+  </section>
+
+  <section class="bottom">
+    <div>
+      <h2>ใครซื้อ</h2>
+      <table>
+        <tr><td>อบต. / เทศบาล</td><td>ลูกค้าหลัก ติดบ้านเปราะบางที่ อสม. ดูแลอยู่แล้ว ใช้ได้ทั้งปี</td></tr>
+        <tr><td>ครอบครัว</td><td>มีพ่อแม่สูงอายุอยู่บ้านคนเดียว</td></tr>
+        <tr><td>ศูนย์ดูแลผู้สูงอายุ</td><td>บ้านพักคนชรา เนอร์สซิ่งโฮม ปุ่มขอช่วยที่ใช้ได้แม้ไฟดับ</td></tr>
+        <tr><td>มูลนิธิ / หน่วยกู้ภัย</td><td>ตั้งตัวรับเป็นจุดรับเรื่องของตัวเองในพื้นที่</td></tr>
+        <tr><td>บริษัทประกัน · ผู้ดูแลผู้สูงอายุ</td><td>แพ็กเกจปุ่มฉุกเฉินในบ้านให้ลูกค้า</td></tr>
+        <tr><td>ที่พัก · โรงเรียน</td><td>รีสอร์ต หอพัก ห้องพยาบาล ชุมชนบนดอย ที่สัญญาณไม่แน่นอน</td></tr>
+      </table>
+    </div>
+    <div>
+      <h2>ทำได้จริง <span class="note" style="font-weight:400">ราคาเป็นประมาณการ</span></h2>
+      <table class="spec">
+        <tr><td>ราคาขายกล่องบ้าน</td><td>≈ 1,445 บาท <span class="note">ต้นทุน ≈ 850</span></td></tr>
+        <tr><td>ราคาขายตัวรับ</td><td>≈ 850 บาท <span class="note">ต้นทุน ≈ 500</span></td></tr>
+        <tr><td>วิทยุ</td><td><span class="mono">923.2 MHz · 14 dBm</span></td></tr>
+        <tr><td>โปรแกรม</td><td>ผ่าน 52/52 กรณี <span class="note">จำลองบนคอม</span></td></tr>
+        <tr><td>ทดสอบกล่องจริง</td><td><span class="pending">8–9 พ.ย. 2569</span></td></tr>
+        <tr><td>นำร่อง</td><td>ประสาน อบต. หลังทดสอบผ่าน</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <div class="titleblock">
+    <div><span class="k">ชื่อผลงาน</span><span class="v">FloodLink — กล่องสื่อสารสองทาง<br>เพื่อผู้เปราะบางในภาวะน้ำท่วม</span></div>
+    <div><span class="k">งาน</span><span class="v">Hallow Open Hub</span></div>
+    <div><span class="k">สถานะ</span><span class="v">ต้นแบบ (Proof of Concept)<br><span class="note">ภาพเป็นแบบจำลอง 3 มิติ</span></span></div>
+    <div><span class="k">แผ่น</span><span class="v mono">1 / 1</span></div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ผังต่อสาย 3 มิติ — ปุ่มเรียกเรือ</title>
+  <meta name="description" content="ผังต่อสายของกล่องบ้านและตัวรับ ดูได้ทั้งแบบ 3 มิติและ 2D มองจากด้านบน กล่องบ้านเป็นขนาดจริงบนแผ่นไข่ปลา จิ้มสายเพื่อดูว่าต่อจากขาไหนไปขาไหน ตรงกับ docs/wiring.md ทุกเส้น">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+    { "imports": { "three": "../exploded/vendor/three/three.module.js" } }
+  </script>
+</head>
+<body>
+  <header class="top">
+    <a class="back" href="../">← หน้าแรก</a>
+    <div class="ttl">
+      <h1>ผังต่อสาย 3 มิติ</h1>
+      <p>ปุ่มเรียกเรือ รุ่นชาวบ้าน · ESP32-C3 Super Mini + Wio-SX1262</p>
+    </div>
+    <div class="tabs" role="tablist" aria-label="เลือกอุปกรณ์">
+      <button class="tab" type="button" role="tab" data-tab="house" aria-selected="true">กล่องบ้าน <span class="mono">96 เส้น</span></button>
+      <button class="tab" type="button" role="tab" data-tab="rx" aria-selected="false" tabindex="-1">ตัวรับ <span class="mono">21 เส้น</span></button>
+      <button class="tab bb" type="button" role="tab" data-tab="bbHouse" aria-selected="false" tabindex="-1">Breadboard กล่องบ้าน <span class="mono">36 เส้น</span></button>
+      <button class="tab bb" type="button" role="tab" data-tab="bbRx" aria-selected="false" tabindex="-1">Breadboard ตัวรับ <span class="mono">11 เส้น</span></button>
+    </div>
+    <p id="src" class="src">กำลังเทียบกับ <span class="mono">docs/wiring.md</span></p>
+  </header>
+
+  <main class="layout">
+    <section class="stage" aria-label="โมเดล 3 มิติ">
+      <div id="view" class="view"></div>
+      <p id="bbWarn" class="bb-warn" role="note" hidden><b>ขาเป็นค่าออกแบบ — ยังเหลือเช็กบอร์ด ESP32-C3</b> ชื่อขาวิทยุ XL1276-P01 ตรงกับของจริงแล้ว · เทียบตัวหนังสือใต้บอร์ด ESP32-C3 ก่อนต่อทุกเส้น</p>
+      <div id="callA" class="callout" hidden><b></b></div>
+      <div id="callB" class="callout" hidden><b></b></div>
+      <div id="tip" class="tip" hidden></div>
+      <a id="solderLink" class="btn ghost solder-link" href="solder.html" hidden>ดูจุดบัดกรีทั้งหมด (พิมพ์ให้ช่าง)</a>
+      <div id="viewToggle" class="seg" role="group" aria-label="มุมมอง">
+        <button type="button" data-view="3d" aria-pressed="true">3 มิติ</button>
+        <button type="button" data-view="2d" aria-pressed="false">2D มองบน</button>
+      </div>
+      <div id="stepBar" class="stepbar">
+        <button id="stepToggle" class="btn" type="button">ต่อทีละขั้น</button>
+        <div id="stepNav" class="stepnav" hidden>
+          <button id="stepPrev" class="btn ghost" type="button" aria-label="ขั้นก่อนหน้า">←</button>
+          <p id="stepTxt" class="steptxt" aria-live="polite"></p>
+          <button id="stepNext" class="btn ghost" type="button" aria-label="ขั้นถัดไป">→</button>
+          <button id="stepExit" class="btn ghost" type="button">ดูทั้งหมด</button>
+        </div>
+      </div>
+      <p id="howto" class="howto">ลากเพื่อหมุน · ล้อเมาส์หรือบีบนิ้วเพื่อซูม · คลิกขวาหรือลากสองนิ้วเพื่อเลื่อน · จิ้มที่สาย</p>
+      <button id="reset" class="btn ghost reset" type="button">มุมเริ่มต้น</button>
+    </section>
+
+    <aside class="panel">
+      <section id="legend" class="card">
+        <h2>สีของสาย <small>จิ้มเพื่อโฟกัส</small></h2>
+        <div id="chips" class="chips"></div>
+        <h2 class="sub">ราง <small>จิ้มเพื่อดูทุกสายที่ต่อเข้าจุดนี้</small></h2>
+        <div id="rails" class="chips"></div>
+        <div id="refRow">
+          <h2 class="sub">ชั้นอ้างอิง <small>ขนาดกล่องและตำแหน่งรูเป็นค่าประมาณ</small></h2>
+          <div class="chips"><button id="refBtn" type="button" class="chip ref" aria-pressed="true"><i></i>กรอบกล่อง + รูที่ต้องเจาะ</button></div>
+        </div>
+      </section>
+
+      <section id="info" class="card info" aria-live="polite"></section>
+
+      <section class="card list-card">
+        <div class="list-head">
+          <h2>รายการสาย <small>ติ๊กเมื่อบัดกรีเสร็จ</small></h2>
+          <span id="prog-n" class="mono prog-n">0/96</span>
+        </div>
+        <div class="prog" aria-hidden="true"><i id="prog-bar"></i></div>
+        <div id="listScroll" class="list-scroll">
+        <ul id="list" class="list"></ul>
+
+      <section class="notes">
+        <h2>ก่อนต่อจริง</h2>
+        <ul id="note-house">
+          <li><b>ผังนี้เป็นขนาดจริง</b> แผ่นไข่ปลา 70 × 90 มม. รูห่าง 2.54 มม. ทุกขาของชิ้นบนแผ่นลงรูจริง · จิ้มสายแล้วดู "รู คอลัมน์ · แถว" นับจากมุมซ้ายบน (เลขพิมพ์ไว้ทุก 5 รูที่ขอบแผ่น) <span class="dv-tag">จำนวนรู 24 × 30 ยังไม่ได้นับของจริง</span></li>
+          <li><b>กรอบกล่องและตำแหน่งรู</b> กล่อง Leetech ขนาดภายนอก 15 × 15 × 8 ซม. ตามภาพสินค้าของร้าน ขนาดด้านในใช้ค่าประมาณใน <span class="mono">docs/parts.md</span> (~142 × 142 ลึก ~70) <span class="dv-tag">ค่าประมาณ รอวัดกล่องจริง</span> ตำแหน่งปุ่มและไฟบนฝา กับลำโพงบนผนังขวาเป็นตำแหน่งประมาณ</li>
+          <li><b>ต่อทีละขั้น</b> กดปุ่ม "ต่อทีละขั้น" มุมขวาบนของผัง จะเห็นเฉพาะสายของขั้นนั้น สายที่ต่อไปแล้วจะจางลง ติ๊กในรายการเมื่อบัดกรีเสร็จ แล้วกด → ไปขั้นถัดไป</li>
+          <li>ฝากล่องเปิดวางข้างกล่อง มองจากด้านใน · สายที่ไปฝาต้องยาวพอให้เปิดฝาได้</li>
+          <li>ค่า R / C ทั้งหมด <span class="dv-tag">ค่าออกแบบ จะปรับหลังทดสอบ</span></li>
+          <li><b>ESP32-C3 Super Mini</b> วางหัว USB ไว้ด้านบน มองด้านที่มีชิป · <b>⚠ แท็บนี้ยังวาดแถวขากลับข้างจากบอร์ดจริง</b> (ของจริงมองด้านชิป แถว 5V อยู่ขวา) ต้องแก้ก่อนบัดกรีแผ่นไข่ปลา · แท็บ Breadboard ถูกต้องแล้ว</li>
+          <li><b>Wio-SX1262</b> เป็นตัวติดผิว ต้องบัดกรีบนแผ่นแปลงขาก่อน เลขขา 1–12 ตาม datasheet ของ Seeed (ขา 9 ไม่ใช้ เพราะใช้ช่อง IPEX)</li>
+          <li><b>AO3401A</b> ขา 1 G · 2 S · 3 D (บนแผ่นแปลงขา) · <b>S8050</b> หันหน้าแบนเข้าหาตัว ขาซ้ายไปขวา E B C — เช็กกับ datasheet ของล็อตที่ซื้อ</li>
+          <li><b>ราง</b> ในผัง คือเส้นลวดหรือทองแดงยาวบนแผ่นไข่ปลา สายทุกเส้นที่ไปรางเดียวกันต่อถึงกันหมด</li>
+          <li><b>ไฟ WS2812B</b> แต่ละชิ้นมีแผ่น +5V / GND ทั้งสองฝั่ง สายจากรางเข้าฝั่งต้นลูกศร สายไปดวงถัดไปออกฝั่งปลายลูกศร</li>
+          <li>ต้องตัดหัวสาย USB ด้านกล่องออก แล้วบัดกรีสายแดงเข้า D1 · ลำโพงต่อ L+ กับ L− ห้ามลงกราวด์</li>
+          <li>บ้านทั่วไปที่ไม่มีผู้ป่วยติดเตียง ไม่ต้องต่อกลุ่ม "สายวัดน้ำ" (R7, R13 และสาย 4 เส้น)</li>
+          <li>PAM8403 แต่ละรุ่นวางแผ่นต่างกัน ยึดชื่อที่พิมพ์บนแผง (L, R, +, −, L+, L−)</li>
+          <li>ตัวเก็บประจุ (ขาห่าง 2.5 / 5 มม.) และ S8050 (ขาห่าง 1.27 มม.) ดัดขาให้ลงรู 2.54 มม. ตามผัง</li>
+          <li class="holes-li"><b>รูที่ต้องเจาะ และตำแหน่งวางชิ้น</b> <span class="dv-tag">ค่าประมาณทั้งหมด วัดของจริงก่อนเจาะ</span>
+            <ul id="holeList" class="hole-list"></ul>
+            เสาอากาศอยู่ในกล่อง ไม่ต้องเจาะรู (<span class="mono">parts.md</span>)</li>
+        </ul>
+        <ul id="note-bb" hidden>
+          <li><b>ผังรอบ Breadboard</b> ตาม <span class="mono">docs/wiring-breadboard.md</span> · ขา GPIO ตรงกับ <span class="mono">firmware/common/pins.h</span> (หน้านี้เช็กให้ทุกครั้งที่เปิด) · <span class="dv-tag">ค่า R/C และขาทั้งหมดเป็นค่าออกแบบ</span></li>
+          <li><b>อ่านชื่อรู</b> "รู 24c" = คอลัมน์ 24 แถว c · รู 5 รูในคอลัมน์เดียวกันและครึ่งเดียวกัน (a–e หรือ f–j) ต่อถึงกัน · ตำแหน่งรูในผังเป็นตัวอย่าง จะย้ายคอลัมน์ได้ถ้าย้ายทุกเส้นในแถวนั้นไปด้วย</li>
+          <li><b>ราง</b> บน = VSYS (แดง) + GND (น้ำเงิน) · ล่าง = GND + 3V3 · <b>รางขาดกลางแผ่น</b> ต้องมีสายเชื่อมสองครึ่ง · ถ้าเลขคอลัมน์บนแผ่นจริงกลับด้าน ให้กลับด้านตาม</li>
+          <li><b>ต่อทีละขั้น</b> กด "ต่อทีละขั้น" แล้ว → ทีละสาย/ทีละชิ้น วงกลมสีดำชี้รูต้นทาง-ปลายทาง · ขั้น "หยุดทดสอบ" ต้องผ่านก่อนไปช่วงต่อไป (เกณฑ์ใน <span class="mono">docs/test-plan.md</span>)</li>
+          <li><b>วิทยุ XL1276-P01</b> (ชิป SX1276) วาดตามตัวหนังสือด้านหลังโมดูลจริง · ขาห่าง ~2 มม. ต้องบัดกรีสาย · <b>VCC = 3.3V ห้ามต่อ 5V</b> · RES = RESET · ต่อเสาสปริงก่อนเสียบไฟทุกครั้ง</li>
+          <li>ไฟบ้าน = เสียบสาย USB-C เข้าบอร์ดตรง ๆ (ไม่ใช้ D1) · ไม่มีสวิตช์ตัดไฟรอบนี้ (ถ่านอยู่ได้ราว 2–3 วัน <span class="dv-tag">ประมาณการ</span>)</li>
+          <li><b>ปุ่มแดง/เขียว</b> แสดงด้านหลัง เป็นปุ่มอาร์เคดมีหลอดไฟในตัว · ไมโครสวิตช์ 3 ขา ใช้ <b>C กับ NO</b> · ขั้วหลอดไฟ 2 ขาไม่ต่อ</li>
+          <li><b>PAM8403 แผ่นแดง</b> ขาแถวเดียว 11 ขา บนลงล่าง R+ R− L− L+ GND +5V SW GND LIN GND RIN · ขาสีทอง = ต่อ · ขาสีเทา = ปล่อยว่าง</li>
+          <li><b>ตัวเก็บประจุ</b> ตัวดำ (1 / 10 / 470 µF) มีขั้ว: ขายาว = + · ฝั่งแถบ = − · ตัวกลมส้ม "104" = 100 nF · ตัวเล็กเหลือง "103" = 10 nF ไม่มีขั้ว</li>
+          <li><b>ตัวต้านทาน</b> ตัวฟ้า 5 แถบ · กดที่ชิ้นในขั้นตอนจะบอกสีแถบ · ไม่แน่ใจให้วัด Ω ด้วยมัลติมิเตอร์</li>
+        </ul>
+        <ul id="note-rx" hidden>
+          <li>ขาวิทยุเหมือนกล่องบ้านทุกขา ต่างกันที่ <b>NRST ต่อ GPIO4</b> เพื่อรีเซ็ตวิทยุด้วยโปรแกรมได้ถ้าค้าง</li>
+          <li>* ค่า rxR1 / rxC1 / rxC2 ไม่มีใน <span class="mono">docs/wiring.md</span> ผังนี้ใช้เท่ากล่องบ้าน (R5 10 kΩ / C7 10 µF / C8 100 nF) เพราะทำหน้าที่เดียวกัน</li>
+          <li>ไฟเลี้ยงและข้อมูลมาทางสาย USB เส้นเดียวจากโน้ตบุ๊ก</li>
+          <li><b>กล่องตัวรับ</b> ตาม "แบบเจาะกล่องตัวรับ อบต. 1:1" กล่องพลาสติกมีหูยึดผนัง ด้านนอก 105 × 75 มม. ด้านในประมาณ 101 × 71 · ขอบบนของผัง = ผนังหลัง (ฝั่งที่มีสาย) <span class="dv-tag">ความสูงกล่องไม่มีในแบบ รอวัด</span></li>
+          <li><b>เจาะ 3 รู</b> ผนังหลัง: ช่อง USB-C 13 × 8 (ซ้ายเส้นกลาง 20 มม. สูง 13) และรู SMA ⌀6.5 (ขวาเส้นกลาง 30 มม. สูง 16) · ฝา: รูไฟสถานะ ⌀3 (ห่างขอบซ้าย 37.3 ขอบหลัง 21.5) · พิมพ์แบบ PDF ขนาดจริง 100% แปะแล้วเจาะ</li>
+          <li><b>แผ่นไข่ปลา 56 × 62</b> ชิดมุมซ้าย-หลัง ทุกขาลงรูจริง · จิ้มสายแล้วดู "รู คอลัมน์ · แถว" <span class="dv-tag">จำนวนรู 21 × 23 ยังไม่ได้นับของจริง</span> · ไฟบนบอร์ด ESP32-C3 ต้องอยู่ใต้รูไฟของฝา ตำแหน่งไฟต่างกันตามรุ่นบอร์ด เช็กก่อนเจาะฝา</li>
+          <li>เสา 3 dBi ต่อผ่านสายแปลงขั้ว (IPEX → ขั้วเสา) ตั้งเสาบนจุดที่สูงที่สุด สายเสาให้สั้นที่สุด</li>
+          <li>ค่า R / C <span class="dv-tag">ค่าออกแบบ จะปรับหลังทดสอบ</span></li>
+          <li class="holes-li"><b>รูที่ต้องเจาะ และตำแหน่งวางชิ้น</b> <span class="dv-tag">ค่าประมาณทั้งหมด วัดของจริงก่อนเจาะ</span>
+            <ul id="holeListRx" class="hole-list"></ul></li>
+        </ul>
+      </section>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <noscript><p class="nojs">หน้านี้ต้องเปิด JavaScript · ดูตารางสายแบบตัวหนังสือได้ที่ <span class="mono">docs/wiring.md</span> ข้อ 3.1 และ 3.2</p></noscript>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

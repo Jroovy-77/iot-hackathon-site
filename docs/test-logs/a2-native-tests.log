@@ -1,0 +1,95 @@
+# A2 native unit tests — 2026-10-29 23:19
+Verbosity level can be increased via `-v, -vv, or -vvv` option
+Collected 5 tests
+
+Processing test_button in native environment
+--------------------------------------------------------------------------------
+Building...
+Testing...
+test\test_button\test_main.cpp:89: test_short_press_fires_on_release	[PASSED]
+test\test_button\test_main.cpp:90: test_long_press_fires_once_at_2s_while_held	[PASSED]
+test\test_button\test_main.cpp:91: test_1_9s_is_still_short	[PASSED]
+test\test_button\test_main.cpp:92: test_bounce_shorter_than_debounce_is_ignored	[PASSED]
+test\test_button\test_main.cpp:93: test_stuck_button_after_30s	[PASSED]
+test\test_button\test_main.cpp:94: test_held_at_power_on_is_not_a_press	[PASSED]
+test\test_button\test_main.cpp:95: test_millis_wraparound	[PASSED]
+---------------- native:test_button [PASSED] Took 2.23 seconds ----------------
+
+Processing test_gateway in native environment
+--------------------------------------------------------------------------------
+Building...
+Testing...
+test\test_gateway\test_main.cpp:281: test_hello_sends_snap_with_contract_fields	[PASSED]
+test\test_gateway\test_main.cpp:282: test_sos_opens_one_request_acks_every_copy_and_counts_new_presses_as_dup	[PASSED]
+test\test_gateway\test_main.cpp:283: test_accept_sends_accepted_until_box_ack_then_delivered	[PASSED]
+test\test_gateway\test_main.cpp:284: test_done_closes_request_and_sends_done	[PASSED]
+test\test_gateway\test_main.cpp:285: test_auto_sos_needs_confirm_before_accept_and_red_press_makes_it_sos	[PASSED]
+test\test_gateway\test_main.cpp:286: test_safe_bed_house_keeps_request_until_cancel_ok_non_bed_closes	[PASSED]
+test\test_gateway\test_main.cpp:287: test_warn_broadcasts_heard_and_silent_after_6h	[PASSED]
+test\test_gateway\test_main.cpp:288: test_offline_after_13h_silence_and_back_online	[PASSED]
+test\test_gateway\test_main.cpp:289: test_offline_after_3h_during_warn_counted_from_warn_start	[PASSED]
+test\test_gateway\test_main.cpp:290: test_offline_with_open_request_keeps_request_state	[PASSED]
+test\test_gateway\test_main.cpp:291: test_hb_every_2s_and_snap_rate_limited	[PASSED]
+test\test_gateway\test_main.cpp:292: test_bad_lines_are_ignored_and_unknown_command_fails	[PASSED]
+test\test_gateway\test_main.cpp:293: test_retry_counter_and_low_batt_event_from_flags	[PASSED]
+---------------- native:test_gateway [PASSED] Took 2.05 seconds ----------------
+
+Processing test_house in native environment
+--------------------------------------------------------------------------------
+Building...
+Testing...
+test\test_house\test_main.cpp:252: test_warn_then_green_sends_heard_and_ack_says_thanks	[PASSED]
+test\test_house\test_main.cpp:253: test_red_long_sends_sos_light_blinks_until_ack	[PASSED]
+test\test_house\test_main.cpp:254: test_sos_without_ack_retries_and_says_retry_after_3_misses	[PASSED]
+test\test_house\test_main.cpp:255: test_accepted_sends_box_ack_turns_yellow_once	[PASSED]
+test\test_house\test_main.cpp:256: test_messages_for_other_house_are_ignored	[PASSED]
+test\test_house\test_main.cpp:257: test_green_long_sends_safe_and_green_short_replays	[PASSED]
+test\test_house\test_main.cpp:258: test_warn_voice_repeats_every_10_minutes_until_green	[PASSED]
+test\test_house\test_main.cpp:259: test_probe_needs_30s_continuous_water_then_status	[PASSED]
+test\test_house\test_main.cpp:260: test_auto_sos_after_2h_wet_without_press_and_press_restarts_count	[PASSED]
+test\test_house\test_main.cpp:261: test_non_bed_box_never_auto_sos	[PASSED]
+test\test_house\test_main.cpp:262: test_low_battery_says_once_and_flags_status	[PASSED]
+test\test_house\test_main.cpp:263: test_first_status_within_30_minutes	[PASSED]
+test\test_house\test_main.cpp:264: test_status_stays_hourly_while_warn_repeats_even_after_green	[PASSED]
+----------------- native:test_house [PASSED] Took 1.76 seconds -----------------
+
+Processing test_protocol in native environment
+--------------------------------------------------------------------------------
+Building...
+Testing...
+test\test_protocol\test_main.cpp:121: test_lengths_match_contract_table	[PASSED]
+test\test_protocol\test_main.cpp:122: test_header_bytes_and_little_endian_id_and_zero_mic	[PASSED]
+test\test_protocol\test_main.cpp:123: test_roundtrip_every_type	[PASSED]
+test\test_protocol\test_main.cpp:124: test_decode_rejects_bad_input	[PASSED]
+test\test_protocol\test_main.cpp:125: test_flags_pack_and_try_caps_at_15	[PASSED]
+test\test_protocol\test_main.cpp:126: test_battery_byte_is_20mV_steps	[PASSED]
+test\test_protocol\test_main.cpp:127: test_airtime_matches_contract_4_3	[PASSED]
+test\test_protocol\test_main.cpp:128: test_radio_config_is_legal	[PASSED]
+--------------- native:test_protocol [PASSED] Took 1.75 seconds ---------------
+
+Processing test_reliable in native environment
+--------------------------------------------------------------------------------
+Building...
+Testing...
+test\test_reliable\test_main.cpp:178: test_first_send_within_0_to_3s	[PASSED]
+test\test_reliable\test_main.cpp:179: test_ack_stops_retries_and_wrong_ack_is_ignored	[PASSED]
+test\test_reliable\test_main.cpp:180: test_no_ack_retries_after_3s_wait_plus_5_to_15s_same_seq_try_increments	[PASSED]
+test\test_reliable\test_main.cpp:181: test_max_wait_is_3_plus_15s	[PASSED]
+test\test_reliable\test_main.cpp:182: test_after_5_tries_every_60s_then_every_5min_after_1h	[PASSED]
+test\test_reliable\test_main.cpp:183: test_status_gives_up_after_3_tries	[PASSED]
+test\test_reliable\test_main.cpp:184: test_retry_voice_after_3rd_miss_then_every_10min_then_30min	[PASSED]
+test\test_reliable\test_main.cpp:185: test_late_ack_after_wait_window_still_counts	[PASSED]
+test\test_reliable\test_main.cpp:186: test_heartbeat_first_within_30min_then_6h_plus_minus_10min	[PASSED]
+test\test_reliable\test_main.cpp:187: test_heartbeat_every_1h_during_warning	[PASSED]
+test\test_reliable\test_main.cpp:188: test_heartbeat_kick_only_moves_earlier	[PASSED]
+--------------- native:test_reliable [PASSED] Took 1.70 seconds ---------------
+
+=================================== SUMMARY ===================================
+Environment    Test           Status    Duration
+-------------  -------------  --------  ------------
+native         test_button    PASSED    00:00:02.226
+native         test_gateway   PASSED    00:00:02.050
+native         test_house     PASSED    00:00:01.758
+native         test_protocol  PASSED    00:00:01.755
+native         test_reliable  PASSED    00:00:01.704
+================= 52 test cases: 52 succeeded in 00:00:09.493 =================

@@ -1,0 +1,811 @@
+/* เว็บเลื่อนแยกชิ้น 3D — ปุ่มเรียกเรือ รุ่น 2 · ทิศทางหน้าตา: แบบ ก "แบบแปลนวิศวกร" (docs/design-direction.md) */
+:root {
+  --paper: #F3F2EE;
+  --panel: #FFFFFF;
+  --rule: #DAD8D0;
+  --frame: #9C9A92;
+  --ink: #1F1F1D;
+  --ink2: #5F5E5A;
+  /* สีสถานะ ใช้กับสถานะเท่านั้น */
+  --orange: #E0701A;
+  --green: #2F8A3E;
+  --red: #D23B30;
+  --yellow: #E8B400;
+  --silent: #888780;
+  /* สีสาย */
+  --w-pow: #B4462F;
+  --w-gnd: #1F1F1D;
+  --w-data: #2E6DB4;
+  --w-audio: #7A4FB0;
+  --th: "Leelawadee UI", "Noto Sans Thai", Tahoma, sans-serif;
+  --mono: Consolas, "Cascadia Mono", monospace;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background-color: var(--paper);
+  /* กระดาษกราฟจาง ๆ แบบแบบแปลน */
+  background-image:
+    linear-gradient(rgba(31, 31, 29, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(31, 31, 29, 0.045) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--th);
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: var(--ink); color: var(--paper); }
+a { color: var(--ink); text-decoration-color: var(--frame); text-underline-offset: 0.2em; }
+a:hover { text-decoration-color: var(--ink); }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.nw { white-space: nowrap; }
+
+/* ป้ายค่าออกแบบ: ตัวเล็ก monospace ติดกับค่า */
+.dv-tag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  padding: 0 5px;
+  border: 1px dashed var(--frame);
+  border-radius: 2px;
+  color: var(--ink2);
+  white-space: nowrap;
+  vertical-align: 0.1em;
+  font-weight: 400;
+}
+
+/* แถบบน */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 20;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 16px;
+  font-size: 15px;
+  background: rgba(243, 242, 238, 0.92);
+  border-bottom: 1px solid var(--rule);
+  pointer-events: none;
+}
+.topbar .brand { font-weight: 700; }
+.topbar .ver { font-family: var(--mono); font-weight: 400; font-size: 12px; color: var(--ink2); margin-left: 6px; }
+.topbar .progress { flex: 0 0 140px; height: 2px; background: var(--rule); overflow: hidden; }
+.topbar .progress i { display: block; height: 100%; background: var(--ink); transform-origin: 0 50%; transform: scaleX(0); }
+
+/* ฉาก 3D */
+#stage { position: fixed; inset: 0; z-index: 1; }
+#stage canvas { display: block; width: 100%; height: 100%; }
+
+/* ป้ายเส้นชี้ */
+#labels { position: fixed; inset: 0; z-index: 5; pointer-events: none; }
+#labels .leaders { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+#labels line, #labels circle { opacity: 0; transition: opacity 0.25s; }
+#labels line.on, #labels circle.on { opacity: 1; }
+#labels line.strong { stroke: var(--ink); stroke-width: 1; }
+#labels line.faint, #labels line.pin { stroke: var(--frame); stroke-width: 1; }
+#labels circle.strong, #labels circle.pin { fill: var(--panel); stroke: var(--ink); stroke-width: 1.2; }
+#labels circle.faint { fill: var(--frame); stroke: none; }
+.plabel {
+  position: absolute; left: 0; top: 0;
+  opacity: 0; transition: opacity 0.25s;
+  will-change: transform;
+  white-space: nowrap;
+  color: var(--ink);
+}
+.plabel.on { opacity: 1; }
+.plabel b, .plabel .fn, .plabel .meta { display: block; }
+.plabel.strong {
+  padding: 4px 9px 5px;
+  background: var(--panel);
+  border: 1px solid var(--frame);
+  border-radius: 2px;
+  font-size: 13.5px;
+  line-height: 1.35;
+}
+.plabel.strong b { font-weight: 700; }
+.plabel.strong .fn { font-size: 12.5px; color: var(--ink); }
+.plabel .meta { font-size: 11.5px; color: var(--ink2); margin-top: 1px; }
+.plabel .meta .tg { display: inline-block; padding: 0 4px; margin-left: 3px; border: 1px solid var(--rule); border-radius: 2px; line-height: 1.4; }
+.plabel .meta .pr { font-family: var(--mono); }
+.plabel .dv-tag { font-size: 10.5px; }
+.plabel.faint { padding: 1px 5px; background: rgba(243, 242, 238, 0.85); font-size: 12px; line-height: 1.35; color: var(--ink2); }
+.plabel.faint .fn, .plabel.faint .meta { display: none; }
+.plabel.compact .fn, .plabel.compact .meta { display: none; }
+.plabel.pin {
+  padding: 2px 7px;
+  background: var(--panel);
+  border: 1px solid var(--frame);
+  border-radius: 2px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+/* ป้ายจิ๋ว: R/C บนสาย และชื่อราง */
+.ttag {
+  position: absolute; left: 0; top: 0;
+  font-family: var(--mono); font-size: 10.5px; line-height: 1.3;
+  padding: 0 3px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--rule);
+  color: var(--ink2);
+  white-space: nowrap;
+  opacity: 0; transition: opacity 0.25s;
+}
+.ttag.on { opacity: 1; }
+.ttag.rail { color: var(--ink); border-color: var(--frame); }
+
+/* ช่วงเลื่อน */
+#track { position: relative; z-index: 10; }
+.step { position: relative; height: 100vh; height: 100svh; }
+.step .card {
+  position: fixed;
+  left: 24px; bottom: 24px;
+  width: min(430px, calc(100vw - 48px));
+  max-height: calc(100vh - 110px);
+  overflow: auto;
+  padding: 20px 22px 18px;
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(31, 31, 29, 0.06);
+  opacity: 0; visibility: hidden;
+  transform: translateY(12px);
+  transition: opacity 0.35s cubic-bezier(.2, .7, .2, 1), transform 0.45s cubic-bezier(.2, .7, .2, 1), visibility 0s linear 0.35s;
+}
+.step.active .card { opacity: 1; visibility: visible; transform: none; transition: opacity 0.35s cubic-bezier(.2, .7, .2, 1), transform 0.45s cubic-bezier(.2, .7, .2, 1), visibility 0s; }
+.card h2 { margin: 0 0 8px; font-size: 25px; line-height: 1.32; font-weight: 700; text-wrap: balance; letter-spacing: 0; }
+.card p { margin: 0 0 10px; }
+.card .sub { color: var(--ink2); font-size: 15.5px; }
+.card .small, .small { font-size: 13.5px; color: var(--ink2); }
+.src { font-size: 12.5px; color: var(--ink2); }
+.src a { color: var(--ink2); word-break: break-word; }
+.grp { font-size: 14px; font-weight: 700; margin-bottom: 4px !important; }
+.grp .mono { font-weight: 400; color: var(--ink2); margin-right: 6px; }
+
+/* ฉาก 1 (การ์ดกว้างกลางจอ ไม่มีโมเดล) */
+.step.wide .card {
+  left: 50%; bottom: auto; top: 50%;
+  width: min(880px, calc(100vw - 32px));
+  transform: translate(-50%, calc(-50% + 12px));
+  padding: 28px 32px 22px;
+}
+.step.wide.active .card { transform: translate(-50%, -50%); }
+.step.wide h2 { font-size: 32px; max-width: 24ch; margin-bottom: 18px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); margin: 0 0 16px; border-top: 1px solid var(--ink); }
+.stat { padding: 12px 16px 12px 0; }
+.stat + .stat { padding-left: 16px; border-left: 1px solid var(--rule); }
+.stat .num { display: block; font-family: var(--mono); font-size: 38px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.stat .num small { font-family: var(--th); font-size: 16px; font-weight: 600; margin-left: 6px; letter-spacing: 0; }
+.stat .what { display: block; font-size: 15px; line-height: 1.45; margin: 6px 0 6px; }
+.stat .src { display: block; }
+.note { font-size: 15px; color: var(--ink2); border-top: 1px solid var(--rule); padding-top: 10px; }
+.note .src { display: block; margin-top: 2px; }
+
+/* ของที่ค่อย ๆ ขึ้นตามการเลื่อนภายในช่วง */
+[data-show] { opacity: 0; transform: translateY(8px); transition: opacity 0.35s, transform 0.45s cubic-bezier(.2, .7, .2, 1); }
+[data-show].shown { opacity: 1; transform: none; }
+tr[data-show] { transform: none; }
+
+/* รายการชิ้น (แสดงเมื่อป้าย 3D ย่อหรือไม่มี 3D) */
+.parts { display: none; margin: 8px 0 0; padding: 0; list-style: none; font-size: 14px; border-top: 1px solid var(--rule); }
+.parts li { padding: 6px 0; border-bottom: 1px solid var(--rule); line-height: 1.45; }
+.parts li b { font-weight: 700; }
+.parts li .meta { display: block; font-size: 12.5px; color: var(--ink2); }
+.parts li .meta .pr { font-family: var(--mono); }
+.parts li .meta .tg { display: inline-block; padding: 0 4px; margin-left: 3px; border: 1px solid var(--rule); border-radius: 2px; line-height: 1.4; }
+.total { margin: 12px 0 2px !important; font-size: 18px; }
+.total b { font-family: var(--mono); font-size: 24px; }
+.total .est { font-size: 13px; color: var(--ink2); }
+
+/* ฉากผังต่อสาย */
+.btn-line, .btn-ink {
+  font: inherit; font-size: 14.5px; line-height: 1.3;
+  padding: 7px 12px;
+  border-radius: 3px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-line { border: 1px solid var(--frame); background: var(--panel); color: var(--ink); }
+.btn-line:hover { border-color: var(--ink); }
+.btn-line[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+.btn-ink { border: 1px solid var(--ink); background: var(--ink); color: var(--panel); }
+.flat-slot { display: none; }
+.flat-toggle { margin-top: 4px; }
+
+#legend {
+  position: fixed; left: 16px; top: 56px; z-index: 12;
+  padding: 8px 12px 6px;
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  font-size: 13px;
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.3s, visibility 0s linear 0.3s;
+  pointer-events: none;
+}
+#legend.on { opacity: 1; visibility: visible; transition: opacity 0.3s, visibility 0s; }
+#legend .lg-h { margin: 0 0 4px; font-weight: 700; font-size: 12.5px; }
+#legend ul { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: auto auto; gap: 2px 14px; }
+#legend li { display: flex; align-items: center; gap: 7px; }
+#legend li i { width: 20px; height: 3px; background: var(--c); }
+#legend .lg-n { margin: 6px 0 0; font-family: var(--mono); font-size: 11.5px; color: var(--ink2); }
+
+/* ผังแบบแบน */
+#flat {
+  position: fixed; z-index: 11;
+  top: 64px; right: 24px; bottom: 24px;
+  width: min(600px, calc(100vw - 500px));
+  right: auto; left: 24px;
+  display: flex; flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--frame);
+  border-radius: 3px;
+}
+#flat[hidden] { display: none; }
+.flat-tabs { display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1px solid var(--rule); padding: 0 8px; }
+.flat-tabs button {
+  font: inherit; font-size: 13px;
+  padding: 8px 9px 7px;
+  border: 0; border-bottom: 2px solid transparent;
+  background: none; color: var(--ink2); cursor: pointer;
+}
+.flat-tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); font-weight: 700; }
+.flat-body { overflow: auto; padding: 10px 14px 14px; }
+.fg-h { margin: 0 0 6px; font-weight: 700; font-size: 15px; }
+.fg-pins { display: flex; flex-wrap: wrap; gap: 4px 6px; margin: 0 0 8px; padding: 0; list-style: none; }
+.fg-pins li { font-family: var(--mono); font-size: 12px; padding: 1px 6px; border: 1px solid var(--frame); border-radius: 2px; }
+.fg-n { font-family: var(--mono); font-size: 12px; color: var(--ink2); margin: 0 0 6px; }
+.frows { margin: 0; padding: 0; list-style: none; }
+.frow {
+  display: grid; grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr); align-items: center; gap: 6px;
+  padding: 3px 0;
+  border-bottom: 1px solid #ECEBE6;
+  font-family: var(--mono); font-size: 12px; line-height: 1.35;
+}
+.frow .a { text-align: right; }
+.frow .ln { height: 2px; background: var(--c); position: relative; }
+.frow .ln::before, .frow .ln::after { content: ""; position: absolute; top: -2px; width: 6px; height: 6px; border-radius: 50%; background: var(--c); }
+.frow .ln::before { left: -3px; }
+.frow .ln::after { right: -3px; }
+.frow .k { font-family: var(--th); font-size: 11px; color: var(--ink2); display: block; }
+.frow.int { color: var(--ink2); }
+.frow.int .ln { opacity: 0.6; }
+
+/* ฉาก 4 · รายการสี */
+.colors { margin: 4px 0 10px; padding: 0; list-style: none; border-top: 1px solid var(--rule); }
+.colors li { display: flex; align-items: center; gap: 10px; padding: 6px 4px; border-bottom: 1px solid var(--rule); font-size: 15px; color: var(--ink2); }
+.colors li .sw { flex: none; width: 16px; height: 16px; border-radius: 50%; background: var(--c); }
+.colors li .sw.blink { box-shadow: 0 0 0 3px var(--panel), 0 0 0 4px var(--c); }
+.colors li .sw.sq { border-radius: 2px; transform: rotate(45deg) scale(0.86); }
+.colors li b { color: var(--ink); }
+.colors li[aria-current="true"] { color: var(--ink); background: #F7F6F2; }
+.colors li[aria-current="true"] b { font-size: 16.5px; }
+.colors .say { display: none; }
+
+/* ฉาก 5 · เรื่องสมมติ และฉากผังสาย: กล่องซ้าย การ์ดขวา (ฝาที่พลิกเปิดวางอยู่ซ้ายของกล่อง) */
+.step.story .card, .step.wire .card { left: auto; right: 24px; }
+.fiction {
+  display: inline-block;
+  margin: 0 0 6px !important;
+  padding: 1px 7px;
+  font-size: 12.5px;
+  border: 1px solid var(--ink);
+  border-radius: 2px;
+}
+.who { font-size: 14px; color: var(--ink2); }
+
+/* ฉาก 6–7: กล่องเล็กมุมซ้ายบน การ์ดใหญ่ */
+.step.wide2 .card { left: auto; right: 24px; bottom: 24px; width: min(760px, calc(100vw - 48px)); }
+.cmp { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.45; margin: 6px 0 10px; }
+.cmp th { text-align: left; font-size: 12.5px; font-weight: 700; color: var(--ink2); padding: 4px 8px 6px 0; border-bottom: 1px solid var(--ink); }
+.cmp td { vertical-align: top; padding: 8px 10px 8px 0; border-bottom: 1px solid var(--rule); }
+.cmp td:last-child { font-weight: 700; }
+.src-a { font-size: 12px; color: var(--ink2); white-space: nowrap; }
+.close { font-weight: 700; }
+.waits { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0 12px; }
+.wait { border: 1px dashed var(--frame); border-radius: 3px; padding: 12px 14px; min-height: 92px; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; }
+.wait b { font-size: 15px; }
+.wait .mono { font-size: 12.5px; color: var(--ink2); }
+
+/* ป้ายจำลอง / เร่งเวลา */
+#badges {
+  position: fixed; top: 52px; left: 16px; z-index: 13;
+  display: flex; flex-wrap: wrap; gap: 6px;
+  pointer-events: none;
+}
+.badge {
+  display: none;
+  font-size: 13.5px; font-weight: 700; line-height: 1.4;
+  padding: 4px 10px;
+  border-radius: 2px;
+}
+.badge.on { display: inline-block; }
+.badge.sim { background: var(--ink); color: var(--panel); }
+.badge.fast { font-family: var(--mono); font-weight: 400; font-size: 12.5px; background: var(--panel); color: var(--ink); border: 1px dashed var(--ink); }
+
+/* ฟองคำพูด */
+#bubble {
+  position: fixed; left: 0; top: 0; z-index: 13;
+  pointer-events: none;
+  opacity: 0; transition: opacity 0.25s;
+  max-width: min(340px, calc(100vw - 32px));
+}
+#bubble.on { opacity: 1; }
+#bubble .bb {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 9px 12px 10px;
+  background: var(--panel);
+  border: 1px solid var(--ink);
+  border-radius: 3px;
+  font-size: 16px; font-weight: 700; line-height: 1.45;
+  position: relative;
+}
+#bubble .bb::before {
+  content: ""; position: absolute; left: -7px; top: 14px;
+  width: 12px; height: 12px; background: var(--panel);
+  border-left: 1px solid var(--ink); border-bottom: 1px solid var(--ink);
+  transform: rotate(45deg);
+}
+#bubble.below .bb::before { left: 28px; top: -7px; transform: rotate(135deg); }
+#bubble .spk { flex: none; width: 20px; height: 20px; margin-top: 2px; fill: var(--ink); stroke: var(--ink); stroke-width: 0; }
+#bubble .spk .w { fill: none; stroke-width: 2; stroke-linecap: round; }
+#bubble.talk .spk .w { animation: talk 0.9s ease-in-out infinite; }
+@keyframes talk { 50% { opacity: 0.25; } }
+#bubble > .dv-tag { margin-top: 4px; background: var(--paper); }
+#bubble.nodv > .dv-tag { display: none; }
+
+.hint {
+  position: fixed; left: 50%; bottom: 14px; z-index: 15;
+  transform: translateX(-50%);
+  font-size: 14px; color: var(--ink2);
+  transition: opacity 0.4s; pointer-events: none;
+}
+.hint.hide { opacity: 0; }
+
+/* ภาพนิ่ง (ซ่อนจนกว่าจะไม่มี 3D) */
+.still { display: none; }
+
+/* ---------- ฉาก 8: ลองใช้กล่องเสมือน ---------- */
+.tabs { display: flex; gap: 0; margin: 4px 0 10px; border: 1px solid var(--ink); border-radius: 3px; overflow: hidden; }
+.tab {
+  flex: 1; font: inherit; font-size: 15px; font-weight: 700;
+  padding: 8px 6px;
+  border: 0; border-left: 1px solid var(--ink);
+  background: var(--panel); color: var(--ink);
+  cursor: pointer;
+}
+.tab:first-child { border-left: 0; }
+.tab[aria-selected="true"] { background: var(--ink); color: var(--panel); }
+.how { font-size: 15px; line-height: 1.5; margin-bottom: 10px !important; }
+.how .dv-tag { vertical-align: 0.05em; }
+.water { margin: 0 0 10px; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 3px; }
+.water[hidden] { display: none; }
+.water label { display: flex; justify-content: space-between; font-size: 14px; }
+.water input { width: 100%; margin: 6px 0 2px; accent-color: var(--ink); touch-action: pan-y; }
+.water .mark { margin: 0 !important; font-size: 12.5px; color: var(--ink2); }
+
+.holds { display: grid; grid-template-columns: 1.25fr 1fr; gap: 8px; }
+.hold {
+  position: relative; overflow: hidden;
+  border: 0; border-radius: 4px;
+  font: inherit; font-weight: 700; font-size: 17px;
+  color: #fff;
+  padding: 13px 10px;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none; -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.22);
+}
+.hold-red { background: var(--red); }
+.hold-green { background: var(--green); }
+.hold.holding { box-shadow: inset 0 2px 0 rgba(0, 0, 0, 0.25); transform: translateY(1px); }
+.hold-fill { position: absolute; inset: 0; background: rgba(255, 255, 255, 0.32); transform-origin: 0 50%; transform: scaleX(var(--p, 0)); pointer-events: none; }
+.hold-txt { position: relative; pointer-events: none; }
+.tip { min-height: 1.5em; margin: 6px 0 0 !important; font-size: 14px; font-weight: 700; }
+.tip:empty { min-height: 0; margin: 0 !important; }
+.try-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.btn-line.mute { padding: 5px 8px; line-height: 0; }
+.mute svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.mute svg path:first-child { fill: currentColor; stroke: none; }
+.mute .off, .mute.muted .on { display: none; }
+.mute.muted .off { display: inline; }
+html.no3d .only3d, html.reduced .only3d { display: none; }
+.cta {
+  display: block; margin-top: 12px;
+  padding: 11px 14px;
+  background: var(--ink); color: var(--panel);
+  text-align: center; text-decoration: none; font-weight: 700;
+  border-radius: 3px;
+}
+.cta:hover { background: #3a3a37; color: var(--panel); }
+
+/* จอทีมช่วยเหลือ (จำลอง) */
+.screen { margin-top: 12px; padding: 10px 12px 12px; border: 1px solid var(--frame); border-radius: 3px; background: var(--panel); font-size: 14px; }
+.scr-h { margin: 0 0 6px !important; font-weight: 700; font-size: 14px; padding-bottom: 6px; border-bottom: 1px solid var(--rule); }
+.scr-clock { margin: 0 0 6px !important; font-family: var(--mono); font-size: 12.5px; color: var(--ink); }
+.scr-clock[hidden] { display: none; }
+.scr-count { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 4px 0 8px; }
+.scr-count div { padding: 6px 8px; border: 1px solid var(--rule); border-radius: 2px; }
+.scr-count b { display: block; font-family: var(--mono); font-size: 22px; line-height: 1.1; }
+.scr-count span { font-size: 12.5px; color: var(--ink2); }
+.scr-list { margin: 0 0 6px; padding: 0; list-style: none; }
+.scr-list li { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--rule); line-height: 1.35; }
+.scr-list li:first-child { border-top: 1px solid var(--rule); }
+.scr-list .no { font-family: var(--mono); font-size: 12px; color: var(--ink2); width: 1.6em; }
+.scr-list .nm { flex: 1; }
+.scr-list .nm small { display: block; font-size: 12px; color: var(--ink2); }
+.scr-list .st { font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+.scr-sub { margin: 6px 0 4px !important; font-size: 12.5px; font-weight: 700; color: var(--ink2); }
+.scr-empty { margin: 4px 0 6px !important; font-size: 13px; color: var(--ink2); }
+/* จุดสถานะ: รูปร่างต่างกันด้วย (ส้ม = วงแหวนกะพริบ, เหลือง = สี่เหลี่ยมข้าวหลามตัด) */
+.dot { flex: none; width: 12px; height: 12px; border-radius: 50%; background: var(--c, var(--silent)); }
+.dot.orange { --c: var(--orange); background: none; border: 3px solid var(--orange); }
+.dot.green { --c: var(--green); }
+.dot.red { --c: var(--red); }
+.dot.yellow { --c: var(--yellow); border-radius: 1px; transform: rotate(45deg) scale(0.85); }
+.dot.silent { --c: var(--silent); box-shadow: 0 0 0 2px var(--panel), 0 0 0 3.5px var(--orange); }
+.dot.idle { background: none; border: 1px solid var(--frame); }
+.scr-act { display: flex; flex-wrap: wrap; gap: 6px; }
+.scr-act:empty { display: none; }
+.scr-act .btn-ink { flex: 1 1 auto; font-weight: 700; }
+.scr-act .btn-ink.pressed, .scr-act .btn-ink:active { background: #3a3a37; }
+.scr-note { margin: 8px 0 0 !important; font-size: 13px; font-weight: 700; }
+.scr-note:empty { display: none; }
+
+/* กล่อง 2D สำรอง */
+.box2d { display: none; position: relative; }
+.b2 { display: block; width: 100%; max-width: 300px; height: auto; margin: 0 auto; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.b2-body { fill: #ECEBE6; stroke: var(--ink); stroke-width: 1.2; }
+.b2-floor { stroke: var(--frame); stroke-width: 1; }
+.b2-water { fill: rgba(46, 109, 180, 0.16); stroke: var(--frame); stroke-width: 0.8; }
+.b2-probe { stroke: var(--ink); stroke-width: 1.4; }
+.b2-probe.red { stroke: var(--w-pow); }
+.b2-lvl { stroke: var(--ink2); stroke-width: 0.8; stroke-dasharray: 3 3; }
+.b2-lvt { font-family: var(--mono); font-size: 9px; fill: var(--ink2); }
+.b2-glow { fill: var(--glow, transparent); opacity: 0; }
+.box2d.lit .b2-glow { opacity: 0.18; }
+.b2-leds circle { fill: #D9D6B8; stroke: var(--frame); stroke-width: 0.6; }
+.b2-l9 { fill: #D9D6B8; stroke: var(--frame); stroke-width: 0.6; }
+.b2-red, .b2-green { cursor: pointer; touch-action: none; -webkit-tap-highlight-color: transparent; stroke: var(--ink); stroke-width: 2.5; }
+.b2-red { fill: var(--red); }
+.b2-green { fill: var(--green); }
+.box2d.press-red .b2-red { stroke-width: 5; filter: brightness(0.85); }
+.box2d.press-green .b2-green { stroke-width: 4.5; filter: brightness(0.85); }
+.b2-prog { fill: none; stroke: var(--ink); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 100; transform: rotate(-90deg); transform-origin: -25px 0; opacity: 0; pointer-events: none; }
+.b2-prog.on { opacity: 1; }
+.b2-bubble { margin: 6px 0 0 !important; min-height: 1.5em; padding: 6px 10px; border: 1px solid var(--ink); border-radius: 3px; background: var(--panel); font-weight: 700; font-size: 15px; visibility: hidden; }
+.b2-bubble.on { visibility: visible; }
+
+/* สัญญาณวิทยุ ดี / อ่อน / ขาด */
+.link { display: flex; align-items: stretch; margin: 12px 0 0; }
+.link-h { align-self: center; font-size: 13.5px; font-weight: 700; margin-right: 10px; white-space: nowrap; }
+.link button {
+  flex: 1; font: inherit; font-size: 14.5px; line-height: 1.3; padding: 6px 8px;
+  border: 1px solid var(--frame); background: var(--panel); color: var(--ink); cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.link button + button { border-left: 0; }
+.link button:first-of-type { border-radius: 3px 0 0 3px; }
+.link button:last-of-type { border-radius: 0 3px 3px 0; }
+.link button:hover { background: #F7F6F2; }
+.link button[aria-checked="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); font-weight: 700; }
+.link-how { margin: 4px 0 0 !important; font-size: 12.5px; color: var(--ink2); min-height: 2.6em; }
+.wait-tag { display: inline-block; font-family: var(--mono); font-size: 12px; padding: 0 6px; border: 1px dashed var(--frame); border-radius: 2px; color: var(--ink2); white-space: nowrap; }
+
+/* จอของตัวรับ (Serial) */
+.serial { margin-top: 8px; border: 1px solid var(--frame); border-radius: 3px; background: var(--panel); }
+.serial summary {
+  display: flex; align-items: baseline; gap: 6px;
+  padding: 8px 12px; cursor: pointer; list-style: none;
+  font-size: 14px; font-weight: 700;
+}
+.serial summary::-webkit-details-marker { display: none; }
+.serial summary::before { content: ""; flex: none; align-self: center; width: 6px; height: 6px; border-right: 1.5px solid var(--ink); border-bottom: 1.5px solid var(--ink); transform: rotate(-45deg); transition: transform 0.15s; margin-right: 2px; }
+.serial[open] summary::before { transform: rotate(45deg); }
+.serial summary .mono { font-weight: 400; }
+.ser-n { margin-left: auto; font-size: 12px; color: var(--ink2); }
+.ser-h { margin: -2px 12px 6px !important; font-size: 12px; color: var(--ink2); }
+.ser-log {
+  margin: 0; padding: 6px 12px 8px; list-style: none;
+  max-height: 10.5em; overflow: auto;
+  font-size: 12px; line-height: 1.45;
+  border-top: 1px solid var(--rule); background: #FAFAF7;
+  scrollbar-width: thin; scrollbar-color: var(--frame) transparent;
+}
+.ser-log li { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 8px; padding: 1px 0; }
+.ser-log li:last-child { font-weight: 700; }
+.ser-log time { color: var(--ink2); font-weight: 400; }
+.ser-log span { white-space: pre-wrap; overflow-wrap: anywhere; }
+.ser-log:empty::before { content: "ยังไม่มีข้อความเข้า"; font-family: var(--th); color: var(--ink2); }
+
+/* ภาพนิ่งแผนที่ + ข้อมูลระยะ (ใช้ทั้งในการ์ดภาพนิ่ง และป้ายบนแผนที่ 3D) */
+.mapcard { display: none; margin: 10px 0 0; }
+.mapstill { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; border: 1px solid var(--rule); background: var(--paper); }
+.mapinfo { font-size: 13px; line-height: 1.45; color: var(--ink); }
+.mapinfo p { margin: 0 0 4px; }
+.mapinfo .mi-h { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+#mapInfo3d { font-size: 12.5px; }
+#mapInfo3d p { margin-bottom: 2px; }
+.mapinfo .mi-r { position: relative; padding-left: 18px; }
+.mapinfo .mi-r a { color: var(--ink2); }
+.mapinfo .mi-ring { position: absolute; left: 0; top: 0.32em; width: 11px; height: 11px; border: 1.5px solid var(--w-data); border-radius: 50%; }
+.mapinfo .mi-ring.our { border-style: dashed; border-color: var(--ink); }
+.mapinfo .mi-p { font-size: 12px; color: var(--ink2); margin-top: 6px; }
+.mapinfo .mi-p .dv-tag { margin-left: 4px; }
+html.no3d .mapcard, html.reduced .mapcard { display: block; }
+html.no3d .mapcard .mapinfo, html.reduced .mapcard .mapinfo { padding: 8px 10px; border: 1px solid var(--rule); border-top: 0; background: var(--panel); }
+html.reduced .mapcard { max-width: 520px; }
+
+/* แผนที่สัญญาณ (3D) */
+#mapStage { position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: 0; visibility: hidden; }
+#mapStage canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+#mapStage .veil { position: absolute; inset: 0; z-index: 1; background: var(--paper); opacity: 0; pointer-events: none; }
+html.mapview #mapStage { visibility: visible; }
+#mapUi { position: fixed; inset: 0; z-index: 11; pointer-events: none; visibility: hidden; opacity: 0; transition: opacity 0.25s; }
+html.mapview #mapUi { visibility: visible; opacity: 1; }
+#mapTags { position: absolute; inset: 0; }
+.mtag {
+  position: absolute; left: 0; top: 0;
+  font-size: 13px; line-height: 1.35; white-space: nowrap;
+  padding: 2px 7px; background: rgba(255, 255, 255, 0.92); border: 1px solid var(--frame); border-radius: 2px;
+}
+.mtag.strong { border-color: var(--ink); font-weight: 700; }
+.mpin { position: absolute; left: 0; top: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--ink); box-shadow: 0 0 0 2px var(--panel); }
+.mtag.dist { font-family: var(--mono); font-size: 12.5px; }
+.mtag.ring { color: var(--w-data); border-color: var(--w-data); }
+.mtag.plan { border-style: dashed; border-color: var(--ink); }
+.mtag .dv-tag { font-size: 11px; margin-left: 4px; }
+.mu-air, .mu-say, .mapinfo#mapInfo3d, .mu-rx, .mu-btns { position: absolute; }
+.mu-air {
+  margin: 0; padding: 8px 12px; max-width: min(560px, calc(100vw - 32px));
+  background: var(--panel); border: 1px solid var(--ink); border-radius: 3px;
+  font-size: 15px; font-weight: 700; line-height: 1.4;
+}
+.mu-air:empty { display: none; }
+.mu-air small { display: block; font-weight: 400; font-size: 13px; color: var(--ink2); margin-top: 2px; }
+.mu-say { margin: 0; padding: 6px 10px; background: var(--ink); color: var(--panel); border-radius: 3px; font-weight: 700; font-size: 14.5px; max-width: min(420px, calc(100vw - 32px)); }
+.mu-say:empty { display: none; }
+#mapInfo3d { padding: 8px 12px; background: rgba(255, 255, 255, 0.95); border: 1px solid var(--rule); border-radius: 3px; pointer-events: auto; }
+.mu-rx { max-width: 360px; padding: 10px 12px; background: var(--panel); border: 1px solid var(--frame); border-radius: 3px; font-size: 14px; line-height: 1.45; display: none; }
+.mu-rx ol { margin: 0; padding-left: 1.2em; }
+.mu-rx li + li { margin-top: 3px; }
+html.rxview .mu-rx { display: block; }
+html.rxview #mapInfo3d, html.rxview .mu-air { display: none; }
+.mu-btns { display: flex; gap: 6px; pointer-events: auto; }
+#muSkip { display: none; }
+html.mapskip #muSkip { display: inline-block; }
+#muBack { display: none; }
+html.rxview #muBack { display: inline-block; }
+html.record #mapUi .mu-btns { display: none; }
+.mapinfo-m { display: none; }
+.mu-ser { position: absolute; display: none; margin: 0; padding: 4px 8px; background: #FAFAF7; border: 1px solid var(--frame); border-radius: 2px; font-size: 11.5px; line-height: 1.4; }
+@media (max-width: 720px), (orientation: portrait) {
+  html:not(.no3d):not(.reduced) .finale .mapinfo-m { display: block; order: 2; margin-top: 10px; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 3px; background: var(--panel); }
+  #mapInfo3d { display: none; }
+  html.mapview:not(.rxview) .mu-ser:not(:empty) { display: block; }
+  .mu-air { font-size: 14px; padding: 6px 10px; }
+  .mu-air small { font-size: 12px; }
+  .mtag { font-size: 12px; padding: 1px 6px; }
+  .mtag.dist { font-size: 11.5px; }
+}
+
+/* ฉาก 8 ในจอกว้าง (มี 3D): แผงลองกดซ้าย / จอทีมช่วยเหลือขวา / กล่อง 3D ตรงกลาง */
+@media (min-width: 721px) and (orientation: landscape) {
+  html:not(.no3d) .step .card.finale {
+    --tm-w: clamp(300px, 27vw, 400px);
+    --sc-w: clamp(250px, 23vw, 340px);
+    left: 16px; right: 16px; top: 92px; bottom: 16px;
+    width: auto; max-height: none;
+    padding: 0; overflow: visible;
+    background: none; border: 0; box-shadow: none;
+    pointer-events: none;
+  }
+  html:not(.no3d) .finale .try-main,
+  html:not(.no3d) .finale .side {
+    position: absolute; top: 0; bottom: 0;
+    height: fit-content; max-height: 100%;
+    margin: auto 0;
+    overflow: auto;
+    pointer-events: auto;
+  }
+  html:not(.no3d) .finale .try-main { left: 0; width: var(--tm-w); padding: 18px 18px 16px; background: var(--panel); border: 1px solid var(--rule); border-radius: 4px; }
+  html:not(.no3d) .finale .side { right: 0; width: var(--sc-w); scrollbar-width: thin; }
+  html:not(.no3d) .finale .side .screen { margin-top: 0; border-radius: 4px; }
+  html.reduced .finale .box2d {
+    position: absolute; left: calc(var(--tm-w) + 24px); right: calc(var(--sc-w) + 24px); top: 0; bottom: 0;
+    display: none; place-content: center;
+    pointer-events: auto;
+  }
+  html.reduced.trying .finale .box2d { display: grid; }
+  /* ลดการเคลื่อนไหว: กล่อง 2D ด้านบน ภาพนิ่งแผนที่ด้านล่าง (เลื่อนในพื้นที่กลางได้) */
+  html.reduced.trying .finale .box2d { display: flex; flex-direction: column; align-items: center; overflow: auto; scrollbar-width: thin; padding-bottom: 8px; }
+  html.reduced .finale .box2d > * { flex-shrink: 0; }
+  html.reduced .finale .b2 { width: 220px; }
+  html.reduced .finale .mapcard { width: min(100%, 520px); }
+}
+
+/* ---------- จอแคบ / มือถือ ---------- */
+@media (max-width: 720px) {
+  body { font-size: 16px; }
+  .topbar { font-size: 14px; padding: 8px 16px; }
+  .topbar .progress { flex-basis: 80px; }
+  .step .card, .step.story .card, .step.wire .card, .step.wide2 .card {
+    left: 12px; right: 12px; bottom: 12px;
+    width: auto;
+    max-height: 44vh; max-height: 44svh;
+    padding: 14px 16px 12px;
+  }
+  .card h2 { font-size: 20px; }
+  .card .sub { font-size: 14.5px; }
+  .step.wide .card { top: calc(50% + 22px); max-height: calc(100svh - 64px); padding: 18px 16px 14px; }
+  .step.wide h2 { font-size: 22px; margin-bottom: 12px; }
+  .stats { grid-template-columns: 1fr; margin-bottom: 10px; }
+  .stat { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; padding: 8px 0 !important; border-left: 0 !important; border-bottom: 1px solid var(--rule); }
+  .stat .num { grid-row: span 2; font-size: 24px; align-self: center; }
+  .stat .num small { display: block; margin: 0; font-size: 12.5px; }
+  .stat .what { font-size: 13.5px; margin: 0; }
+  .note { font-size: 13.5px; border-top: 0; padding-top: 4px; }
+  .parts { display: block; }
+  .step.wire .card { max-height: 30svh; }
+  .step.wide2 .card { max-height: 62svh; }
+  .cmp { font-size: 12.5px; }
+  .cmp td { padding: 6px 6px 6px 0; }
+  .waits { grid-template-columns: 1fr; gap: 6px; }
+  .wait { min-height: 0; padding: 8px 10px; }
+  #legend { top: 46px; left: 8px; padding: 6px 8px 4px; font-size: 12px; }
+  #legend .lg-n { display: none; }
+  #flat { top: 46px; left: 8px; right: 8px; bottom: calc(30svh + 22px); width: auto; }
+  #flat .flat-tabs button { font-size: 12px; padding: 7px 6px 6px; }
+  .frow { grid-template-columns: minmax(0, 1fr) 36px minmax(0, 1fr); font-size: 11px; }
+  .plabel.strong { font-size: 12px; padding: 2px 6px 3px; }
+  .plabel.pin { font-size: 11px; padding: 1px 5px; }
+  #badges { top: 44px; left: 8px; }
+  .badge { font-size: 12px; padding: 3px 8px; }
+  #bubble .bb { font-size: 14px; padding: 7px 10px 8px; }
+  .hint { display: none; }
+  .colors li { font-size: 14px; padding: 4px; }
+}
+/* ฉาก 8 ในมือถือ / จอแนวตั้ง: กล่อง 3D ครึ่งบน แผงล่าง */
+@media (max-width: 720px), (orientation: portrait) {
+  html:not(.no3d) .step .card.finale { max-height: 54vh; max-height: 54svh; padding: 10px 12px 12px; }
+  .finale h2 { display: none; }
+  html:not(.no3d) .finale { display: flex; flex-direction: column; }
+  html:not(.no3d) .finale .try-main, html:not(.no3d) .finale .side { display: contents; }
+  html:not(.no3d) .finale .screen, html:not(.no3d) .finale .serial { order: 1; }
+  html:not(.no3d) .finale .try-main > *, html:not(.no3d) .finale .side > * { flex-shrink: 0; }
+  html:not(.no3d) .finale .try-row { order: 2; }
+  html:not(.no3d) .finale .cta { order: 3; }
+  html.reduced .finale .box2d { order: -1; }
+  .finale .tabs { margin-top: 0; }
+  .holds .hold { font-size: 16px; padding: 12px 8px; }
+  .screen { margin-top: 10px; }
+  html.reduced.trying .step .card.finale { max-height: calc(100svh - 84px); }
+  html.reduced.trying .finale .box2d { display: block; margin-bottom: 8px; }
+  html.reduced .b2 { max-width: 210px; }
+}
+
+/* ---------- จอใหญ่ (โปรเจกเตอร์ / 1080p) ---------- */
+@media (min-width: 1500px) and (min-height: 800px) {
+  body { font-size: clamp(17px, 1.1vw, 24px); }
+  .step .card { left: 2vw; bottom: 3vh; width: clamp(430px, 30vw, 680px); padding: 1.4vw 1.6vw 1.2vw; }
+  .step.story .card, .step.wire .card, .step.wide2 .card { left: auto; right: 2vw; }
+  .step.wide2 .card { width: min(1100px, 56vw); }
+  .card h2 { font-size: clamp(25px, 1.7vw, 38px); }
+  .card .sub, .cmp, .colors li, .how { font-size: clamp(15.5px, 1vw, 22px); }
+  .small, .src, .note { font-size: clamp(13px, 0.8vw, 18px); }
+  .step.wide .card { width: min(1240px, 70vw); }
+  .step.wide h2 { font-size: clamp(32px, 2.2vw, 48px); }
+  .stat .num { font-size: clamp(38px, 2.6vw, 58px); }
+  .stat .what { font-size: clamp(15px, 1vw, 22px); }
+  .plabel.strong { font-size: clamp(13.5px, 0.8vw, 18px); }
+  .plabel.strong .fn { font-size: clamp(12.5px, 0.74vw, 16.5px); }
+  .plabel .meta { font-size: clamp(11.5px, 0.66vw, 15px); }
+  .plabel.pin { font-size: clamp(12.5px, 0.74vw, 16.5px); }
+  #legend { font-size: clamp(13px, 0.78vw, 17px); }
+  #bubble { max-width: 460px; }
+  #bubble .bb { font-size: clamp(16px, 1.05vw, 23px); }
+  .badge { font-size: clamp(13.5px, 0.85vw, 19px); }
+  html:not(.no3d) .step .card.finale { --tm-w: clamp(400px, 25vw, 560px); --sc-w: clamp(330px, 21vw, 460px); }
+  .tab, .hold { font-size: clamp(15px, 1vw, 22px); }
+  .screen, .scr-h { font-size: clamp(14px, 0.85vw, 19px); }
+  .flat-body .frow { font-size: clamp(12px, 0.7vw, 15px); }
+}
+
+/* ---------- โหมดภาพนิ่ง (ไม่มี 3D) ---------- */
+html.no3d #stage, html.no3d #labels, html.no3d .hint, html.no3d #legend, html.no3d #flat, html.no3d #bubble { display: none !important; }
+html.no3d .topbar .progress { display: none; }
+html.no3d #track { padding: 64px 16px 40px; max-width: 780px; margin: 0 auto; }
+html.no3d .step { height: auto !important; margin-bottom: 24px; }
+html.no3d .step .card, html.no3d .step.wide .card {
+  position: static; width: auto; max-height: none;
+  opacity: 1; visibility: visible; transform: none;
+}
+html.no3d .still { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border: 1px solid var(--rule); border-bottom: 0; background: var(--panel); }
+html.no3d .still + .card { border-top-left-radius: 0; border-top-right-radius: 0; }
+html.no3d [data-show] { opacity: 1; transform: none; }
+html.no3d .parts { display: block; }
+html.no3d .flat-slot { display: block; margin-top: 8px; }
+html.no3d .flat-toggle { display: none; }
+html.no3d .colors .say { display: block; flex-basis: 100%; font-weight: 700; color: var(--ink); padding-left: 26px; }
+html.no3d .colors li { flex-wrap: wrap; }
+html.no3d #badges { position: static; padding: 0 0 8px; }
+html.no3d .finale .box2d { display: block; margin-bottom: 10px; }
+html.no3d .finale { display: flex; flex-direction: column; }
+html.no3d .finale .try-main, html.no3d .finale .side { display: contents; }
+html.no3d .finale h2 { order: 0; }
+html.no3d .finale .box2d { order: 2; }
+html.no3d .finale .try-main > :not(h2) { order: 3; }
+html.no3d .finale .screen, html.no3d .finale .serial { order: 4; }
+html.no3d .finale > .mapcard { order: 4; margin-top: 10px; }
+html.no3d .finale .cta { order: 5; }
+
+/* ---------- ลดการเคลื่อนไหว: แสดงเป็นขั้น ---------- */
+html.reduced { scroll-snap-type: y mandatory; }
+html.reduced .step { scroll-snap-align: start; }
+html.reduced .step .card, html.reduced .plabel, html.reduced [data-show], html.reduced #bubble { transition: none !important; }
+html.reduced #bubble .spk .w { animation: none; }
+html.reduced.trying #stage, html.reduced.trying #bubble, html.reduced.trying #probeTag { visibility: hidden; }
+.box2d:not(.auto) .b2-probe, .box2d:not(.auto) .b2-lvl, .box2d:not(.auto) .b2-lvt, .box2d:not(.auto) .b2-floor, .box2d:not(.auto) .b2-water { display: none; }
+html.no3d .finale > .badge { order: -1; align-self: flex-start; margin-bottom: 10px; }
+
+/* ---------- ?at= และ ?record=1 ---------- */
+html.at .step .card, html.at .plabel, html.at [data-show], html.at #bubble, html.at #legend, html.at .ttag, html.at #labels line, html.at #labels circle { transition: none !important; }
+html.at .hint { display: none; }
+html.at #bubble .spk .w { animation: none; }
+html.record { scrollbar-width: none; }
+html.record::-webkit-scrollbar { display: none; }
+html.record body, html.record * { cursor: none !important; }
+html.record .hint { display: none; }
+
+/* ?shot=1 : ภาพนิ่งสำหรับเครื่องที่เปิด 3D ไม่ได้ (ไม่มีการ์ด / แถบบน) */
+html.shot .step .card, html.shot .topbar, html.shot .hint, html.shot #flat { display: none !important; }
+html.shot #badges, html.shot #mapInfo3d, html.shot .mu-air, html.shot .mu-say, html.shot .mu-btns, html.shot #roomTag, html.shot #heightTag, html.shot #bubble { display: none !important; }
+
+/* พื้นที่รับการลากหมุน + วงความคืบหน้าบนโมเดล 3D */
+#tryHit {
+  position: fixed; left: 0; top: 0; width: 0; height: 0; z-index: 9;
+  touch-action: none; cursor: grab;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
+}
+#tryHit.over-btn { cursor: pointer; }
+#tryHit.dragging { cursor: grabbing; }
+html:not(.trying) #tryHit { display: none !important; }
+html.trying #track { pointer-events: none; }
+html.trying #track .step.active .card .try-main,
+html.trying #track .step.active .card .side,
+html.trying #track .step.active .card .box2d { pointer-events: auto; }
+@media (max-width: 720px), (orientation: portrait) {
+  html.trying #track .step.active .card.finale { pointer-events: auto; }
+}
+#tryRing { position: fixed; left: 0; top: 0; width: 0; height: 0; z-index: 14; pointer-events: none; opacity: 0; overflow: visible; }
+#tryRing.on { opacity: 1; }
+#tryRing circle { fill: none; stroke-width: 6; }
+#tryRing .bg { stroke: rgba(255, 255, 255, 0.85); }
+#tryRing .arc { stroke: var(--ink); stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 100; transform: rotate(-90deg); transform-origin: 50% 50%; }
+#tryTip3 { position: fixed; left: 0; top: 0; z-index: 14; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
+#tryTip3.on { opacity: 1; }
+#tryTip3 > span { display: block; transform: translateX(-50%); white-space: nowrap; padding: 5px 10px; border-radius: 3px; background: var(--ink); color: var(--panel); font-weight: 700; font-size: 14px; }
+#tryTip3 .dv-tag { color: var(--panel); border-color: rgba(255, 255, 255, 0.6); }
+#probeTag {
+  position: fixed; left: 0; top: 0; z-index: 6; pointer-events: none;
+  font-size: 12.5px; line-height: 1.35;
+  padding: 2px 7px; background: var(--panel); border: 1px solid var(--frame); border-radius: 2px;
+  white-space: nowrap; opacity: 0; transition: opacity 0.25s;
+}
+#probeTag.on { opacity: 1; }
+#roomTag, #heightTag { position: fixed; left: 0; top: 0; z-index: 6; pointer-events: none; opacity: 0; transition: opacity 0.25s; line-height: 1.4; border-radius: 2px; }
+#roomTag { width: max-content; padding: 4px 10px; background: var(--panel); border: 1px solid var(--ink); font-size: 14px; font-weight: 700; text-align: center; }
+#heightTag { padding: 2px 7px; background: rgba(255, 255, 255, 0.92); border: 1px solid var(--frame); font-size: 12.5px; white-space: nowrap; }
+#heightTag .dv-tag { font-size: 11px; margin-left: 4px; }
+#roomTag.on, #heightTag.on { opacity: 1; }
+@media (max-width: 720px), (orientation: portrait) { #roomTag { font-size: 12.5px; padding: 3px 8px; } #heightTag { font-size: 11.5px; } }
+#probeTag .dv-tag { font-size: 10.5px; margin-left: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}

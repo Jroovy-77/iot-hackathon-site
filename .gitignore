@@ -1,0 +1,20 @@
+# ภาพทดสอบ งานเก่า และวิดีโอ ไม่ต้องขึ้น GitHub
+_shots/
+_archive/
+*.mp4
+.claude/settings.local.json
+# ไฟล์ชั่วคราวของ impeccable
+.impeccable/*.png
+.impeccable/review/
+.impeccable/questions/
+.impeccable/live/
+.impeccable/hook.cache.json
+.impeccable/hook.pending.json
+.impeccable/config.local.json
+# เฟิร์มแวร์: ไฟล์คอมไพล์และไลบรารีที่ PlatformIO โหลดมา (สร้างใหม่ได้ด้วย pio run)
+firmware/.pio/
+firmware/platformio-device-monitor-*.log
+
+# ไฟล์เก่าขนาด 158 MB (เกินขีดจำกัด 100 MB ของ GitHub) และไฟล์ระบบ Windows
+Web_iot.zip
+desktop.ini

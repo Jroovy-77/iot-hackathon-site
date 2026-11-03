@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>FloodLink — Proof of Concept</title>
+<style>
+  @page { size: A4; margin: 11mm 12mm; }
+  :root { --ink:#1f1f1d; --ink2:#5f5e5a; --rule:#d6d3c8; --red:#b4462f; --blue:#2e6db4; --gnd:#1f1f1d; --aud:#7a4fb0; --org:#c26a12; --grn:#2f8a3e; --bg:#f6f4ee; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Leelawadee UI", "Noto Sans Thai", Tahoma, sans-serif; color: var(--ink); font-size: 10.6pt; line-height: 1.5; }
+  .page { page-break-after: always; break-after: page; }
+  .page:last-child { page-break-after: auto; break-after: auto; }
+  h1 { font-size: 26pt; margin: 0; line-height: 1.1; letter-spacing: -0.5px; }
+  h2 { font-size: 14.5pt; margin: 14px 0 6px; padding-bottom: 3px; border-bottom: 2px solid var(--ink); }
+  h3 { font-size: 11.5pt; margin: 10px 0 4px; }
+  p { margin: 4px 0; }
+  .sub { font-size: 12.5pt; color: var(--ink2); margin-top: 4px; }
+  .tag { display: inline-block; font-size: 8.5pt; padding: 1px 6px; border: 1px solid var(--org); color: #8a4a0c; border-radius: 3px; vertical-align: 1px; }
+  .src { font-size: 8.3pt; color: var(--ink2); }
+  .mono { font-family: Consolas, "Cascadia Mono", monospace; font-size: 9.2pt; }
+  table { width: 100%; border-collapse: collapse; font-size: 9.4pt; margin: 6px 0; }
+  th, td { border: 1px solid var(--rule); padding: 3px 6px; text-align: left; vertical-align: top; }
+  th { background: var(--bg); font-weight: 600; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .card { border: 1px solid var(--rule); border-radius: 4px; padding: 8px 10px; background: #fff; }
+  .card b.t { display: block; font-size: 10.8pt; margin-bottom: 2px; }
+  .hero { background: var(--bg); border-left: 5px solid var(--red); padding: 10px 14px; margin: 10px 0; font-size: 12pt; }
+  .quote { font-size: 13pt; font-weight: 600; }
+  ul { margin: 4px 0; padding-left: 18px; } li { margin: 2px 0; }
+  .note { font-size: 8.8pt; color: var(--ink2); border-top: 1px dashed var(--rule); padding-top: 4px; margin-top: 6px; }
+  .warn { background: #fff4e5; border: 1.5px solid var(--org); padding: 6px 10px; font-size: 9.4pt; margin: 6px 0; }
+  .ok { color: var(--grn); font-weight: 600; } .pend { color: var(--org); font-weight: 600; }
+  figure { margin: 6px 0; } figcaption { font-size: 8.8pt; color: var(--ink2); margin-top: 2px; }
+  svg text { font-family: "Leelawadee UI", Tahoma, sans-serif; }
+  .bbimg { width: 100%; height: 108mm; object-fit: cover; object-position: 50% 62%; border: 1px solid var(--rule); border-radius: 4px; display: block; }
+  .rximg { width: 100%; height: 62mm; object-fit: cover; object-position: 50% 55%; border: 1px solid var(--rule); border-radius: 4px; display: block; }
+  .foot { font-size: 8pt; color: var(--ink2); text-align: right; margin-top: 6px; }
+  .key { display: inline-block; width: 18px; height: 3px; vertical-align: middle; margin: 0 4px 0 10px; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ หน้า 1 -->
+<section class="page">
+  <p class="src" style="letter-spacing:2px">PROOF OF CONCEPT · Hallow Open Hub</p>
+  <h1>FloodLink</h1>
+  <p class="sub">กล่องติดบ้านที่คุยกับทีมช่วยเหลือได้สองทาง — ไม่ต้องใช้เน็ต ไม่ต้องใช้มือถือ</p>
+
+  <div class="hero">
+    <span class="quote">"ในวันที่ไฟดับ เสามือถือล่ม คนที่เปราะบางที่สุดต้องเป็นคนแรกที่ถูกได้ยิน"</span>
+  </div>
+
+  <h2>1. ปัญหา</h2>
+  <div class="grid3">
+    <div class="card"><b class="t">ความช่วยเหลือไปไม่ถึง</b>น้ำท่วมภาคใต้ พ.ย. 2568 มีผู้เสียชีวิต 162 คน และหลายพื้นที่การช่วยเหลือยังเข้าไปไม่ถึง<br><span class="src">Thai PBS · ศป.กฉ.</span></div>
+    <div class="card"><b class="t">เตือนแล้ว แต่ไม่ถึงคน</b>ข้อความเตือนส่งหลายรอบแต่คนไม่รู้หรือรู้ช้า มีคำขอซ้ำ และผู้สูงอายุที่ไม่มีมือถือหายไปจากแผนที่ขอความช่วยเหลือ<br><span class="src">กรุงเทพธุรกิจ</span></div>
+    <div class="card"><b class="t">1 ใน 3 ไม่ใช้เน็ต</b>ผู้สูงอายุ 60 ปีขึ้นไปใช้อินเทอร์เน็ต 67.3% อีกราว 1 ใน 3 ไม่ได้ใช้<br><span class="src">สำนักงานสถิติแห่งชาติ</span></div>
+  </div>
+  <p>คนที่ต้องการความช่วยเหลือมากที่สุด — <b>ผู้สูงอายุอยู่ลำพังและผู้ป่วยติดเตียงที่ไม่มีมือถือ</b> — คือคนที่ระบบเตือนภัยปัจจุบันเข้าไม่ถึง และเมื่อไฟดับ เสามือถือล่ม พวกเขาก็ไม่มีทางบอกใครว่า "ยังอยู่ตรงนี้"</p>
+
+  <h2>2. ทางแก้</h2>
+  <div class="grid3">
+    <div class="card"><b class="t">ก่อนน้ำมา</b>กล่องแจ้งเตือน (ไฟส้ม + เสียง) คนในบ้านกดตอบรับ ทีมรู้ทันทีว่า<b>บ้านไหนยังเงียบ</b> ต้องไปเคาะประตู</div>
+    <div class="card"><b class="t">ตอนติดอยู่</b>กดปุ่มแดงค้าง 2 วินาที ทีมเห็นบ้านเลขที่และคนในบ้านทันที เมื่อทีมรับเรื่อง กล่องบอกคนในบ้านว่า <b>"ทีมกำลังมา อย่าลงน้ำ"</b></div>
+    <div class="card"><b class="t">ไม่มีใครกด</b>บ้านผู้ป่วยติดเตียงมีสายวัดน้ำ น้ำถึงสายแล้วไม่มีใครกด 2 ชม. <b>กล่องขอความช่วยเหลือให้เอง</b> (อสม. ยืนยันก่อนส่งเรือ) · กล่องที่เงียบนานเกินกำหนดขึ้นว่า "ขาดการติดต่อ"</div>
+  </div>
+
+  <h2>3. ไม่ได้ใช้แค่หน้าน้ำ</h2>
+  <p>วันปกติ ถ้าผู้สูงอายุล้มหรือมีอาการในบ้าน <b>กดปุ่มเดียว ทีมในชุมชนเห็นทันทีว่าบ้านเลขที่เท่าไร ซอยอะไร มีใครอยู่ ติดเตียงไหม</b> โดยไม่ต้องพูดหรือโทร — ข้อมูลที่อยู่มาจากการลงทะเบียนกล่องตอนติดตั้ง (กล่องติดกับที่ ไม่ต้องใช้ GPS) · เหมือนถังดับเพลิง: ติดไว้ทั้งปี วันที่ต้องใช้ต้องใช้ได้ แม้ไฟดับ เน็ตล่ม</p>
+
+  <h2>4. ต่างจากที่มีอยู่</h2>
+  <table>
+    <tr><th></th><th>ข้อความเตือนทางมือถือ</th><th>แอป/ปุ่ม SOS ทั่วไป</th><th>FloodLink</th></tr>
+    <tr><td>ใช้ได้กับคนไม่มีมือถือ</td><td>✗</td><td>✗ ส่วนใหญ่ต้องมีมือถือ/เน็ต</td><td class="ok">✓ กล่องติดบ้าน</td></tr>
+    <tr><td>ใช้ได้ตอนไฟดับ เสามือถือล่ม</td><td>✗</td><td>✗</td><td class="ok">✓ วิทยุของตัวเอง + ถ่านสำรอง</td></tr>
+    <tr><td>รู้ว่าบ้านไหน "ได้ยินแล้ว / ยังเงียบ"</td><td>✗</td><td>✗</td><td class="ok">✓</td></tr>
+    <tr><td>บอกคนในบ้านว่า "ทีมรับเรื่องแล้ว"</td><td>✗</td><td>บางระบบ</td><td class="ok">✓ ไฟเหลือง + เสียง</td></tr>
+  </table>
+  <p class="foot">หน้า 1/6 · FloodLink · ตัวเลขทุกตัวในเอกสารมีที่มา ค่าที่ยังไม่ได้วัดเขียนว่า "ค่าออกแบบ" หรือ "ประมาณการ"</p>
+</section>
+
+<!-- ============================================================ หน้า 2 -->
+<section class="page">
+  <h2 style="margin-top:0">5. ภาพรวมระบบ</h2>
+  <svg viewBox="0 0 1000 250" width="100%">
+    <defs><marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#1f1f1d"/></marker></defs>
+    <g font-size="15">
+      <rect x="10" y="40" width="230" height="160" rx="8" fill="#fff" stroke="#1f1f1d" stroke-width="2"/>
+      <text x="125" y="70" text-anchor="middle" font-weight="700" font-size="17">กล่องบ้าน</text>
+      <text x="125" y="96" text-anchor="middle">ESP32-C3 + SX1276</text>
+      <text x="125" y="120" text-anchor="middle">ปุ่มแดง · ปุ่มเขียว</text>
+      <text x="125" y="144" text-anchor="middle">แหวนไฟ 12 ดวง · ลำโพง</text>
+      <text x="125" y="168" text-anchor="middle">สายวัดน้ำ · ถ่าน AA ×3</text>
+      <text x="125" y="190" text-anchor="middle" fill="#5f5e5a" font-size="13">ไฟบ้าน USB-C + ถ่านสำรอง</text>
+      <line x1="245" y1="100" x2="420" y2="100" stroke="#2e6db4" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#ar)"/>
+      <line x1="420" y1="140" x2="245" y2="140" stroke="#2e6db4" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#ar)"/>
+      <text x="332" y="88" text-anchor="middle" font-size="13">ขอช่วย · ได้ยินแล้ว · ยังอยู่</text>
+      <text x="332" y="164" text-anchor="middle" font-size="13">เตือน · ACK · รับเรื่องแล้ว · เสร็จ</text>
+      <text x="332" y="200" text-anchor="middle" font-size="12.5" fill="#2e6db4">วิทยุ LoRa 923.2 MHz · 14 dBm · ไม่ใช้เน็ต</text>
+      <rect x="425" y="60" width="200" height="120" rx="8" fill="#fff" stroke="#1f1f1d" stroke-width="2"/>
+      <text x="525" y="92" text-anchor="middle" font-weight="700" font-size="17">ตัวรับ</text>
+      <text x="525" y="118" text-anchor="middle">ESP32-C3 + SX1276</text>
+      <text x="525" y="142" text-anchor="middle">ติดที่ อบต. / จุดสูง</text>
+      <text x="525" y="164" text-anchor="middle" fill="#5f5e5a" font-size="13">ไฟจากโน้ตบุ๊ก/พาวเวอร์แบงก์</text>
+      <line x1="630" y1="120" x2="745" y2="120" stroke="#1f1f1d" stroke-width="3" marker-end="url(#ar)"/>
+      <text x="688" y="108" text-anchor="middle" font-size="13">สาย USB</text>
+      <text x="688" y="142" text-anchor="middle" font-size="12" fill="#5f5e5a">Web Serial</text>
+      <rect x="750" y="50" width="240" height="140" rx="8" fill="#fff" stroke="#1f1f1d" stroke-width="2"/>
+      <text x="870" y="82" text-anchor="middle" font-weight="700" font-size="17">แดชบอร์ดทีมช่วยเหลือ</text>
+      <text x="870" y="108" text-anchor="middle">แผนที่บ้าน · คิวคำขอ</text>
+      <text x="870" y="132" text-anchor="middle">บ้านที่ยังเงียบ · ส่งคำเตือน</text>
+      <text x="870" y="156" text-anchor="middle">กดรับเรื่อง / ช่วยเสร็จ</text>
+      <text x="870" y="180" text-anchor="middle" fill="#5f5e5a" font-size="13">เปิดในเบราว์เซอร์ ไม่ต้องใช้เน็ต</text>
+    </g>
+  </svg>
+
+  <h3>ความหมายของไฟบนกล่อง (สีเดียว ความหมายเดียว ทั้งกล่องและแดชบอร์ด)</h3>
+  <table>
+    <tr><th style="color:#c26a12">ส้ม</th><td>มีคำเตือน รอคนในบ้านกดตอบรับ</td><th style="color:#2f8a3e">เขียว</th><td>ได้ยินแล้ว / ช่วยเสร็จ / แจ้งปลอดภัย</td></tr>
+    <tr><th style="color:#b4462f">แดง</th><td>ขอความช่วยเหลือ (กดแดงค้าง 2 วิ หรือกล่องขอแทน)</td><th style="color:#a68a00">เหลือง</th><td>ทีมรับเรื่องแล้ว กำลังมา</td></tr>
+  </table>
+
+  <h3>ค่าวิทยุ (ค่าออกแบบ — ใช้ชุดเดียวกันทั้งสองฝั่ง)</h3>
+  <table>
+    <tr><th>ค่า</th><th>ใช้</th><th>เหตุผล</th></tr>
+    <tr><td>ความถี่</td><td class="mono">923.2 MHz</td><td>ย่าน 920–925 MHz สำหรับอุปกรณ์ทั่วไปในไทย · โมดูลรุ่น "915 MHz" คือรุ่นย่าน ไม่ใช่ความถี่ที่ส่ง</td></tr>
+    <tr><td>กำลังส่ง</td><td class="mono">14 dBm</td><td>รวมกับเสา (≈0–2 dBi) ไม่เกิน EIRP 17 dBm (50 mW) · โปรแกรมคอมไพล์ไม่ผ่านถ้าตั้งเกิน</td></tr>
+    <tr><td>SF / BW / CR</td><td class="mono">SF9 / 125 kHz / 4/5</td><td>ไกลกว่า SF7 แต่ข้อความยังสั้น: 12 ไบต์ ≈ 144 ms ต่อครั้ง (คำนวณจากสูตร Semtech)</td></tr>
+    <tr><td>ข้อความ</td><td class="mono">10–13 ไบต์</td><td>รหัสพื้นที่ · ชนิด · รหัสบ้าน · ลำดับ · ข้อมูล · รหัสกันปลอม</td></tr>
+  </table>
+
+  <h3>ความน่าเชื่อถือที่ออกแบบไว้</h3>
+  <ul>
+    <li><b>ส่งซ้ำจนกว่าจะได้คำตอบ:</b> กดแล้วฟังคำตอบ 3 วิ ไม่ได้ → สุ่มรอ 5–15 วิ ส่งใหม่ · ครบ 5 ครั้ง → ทุก 60 วิ · กล่องพูด "ยังส่งไม่ถึง กำลังลองใหม่" (ค่าออกแบบ)</li>
+    <li><b>1 บ้าน = 1 คำขอ:</b> กดซ้ำหรือส่งซ้ำ ไม่เกิดคำขอใหม่ ทีมไม่สับสน</li>
+    <li><b>รู้ว่ากล่องยังอยู่:</b> กล่องส่ง "ยังอยู่" ทุก 6 ชม. เงียบเกิน 13 ชม. = "ขาดการติดต่อ" ขึ้นบนสุดของรายการ · ช่วงมีคำเตือนส่งทุก 1 ชม. และเงียบเกิน 3 ชม. ก็ขึ้นแล้ว (ค่าออกแบบ)</li>
+    <li><b>ตัวรับส่งซ้ำ "รับเรื่องแล้ว"</b> จนกล่องยืนยันว่าได้ แดชบอร์ดบอกได้ว่าไฟที่บ้านเปลี่ยนแล้วหรือยัง</li>
+    <li><b>ไฟดับ:</b> ถ่าน AA 3 ก้อนรับช่วงต่ออัตโนมัติผ่านไดโอด · รอบ Prototype อยู่ได้ประมาณ 2–3 วัน <span class="tag">ประมาณการ</span> · กล่องจริงรุ่นถัดไปเพิ่มสวิตช์ตัดไฟเพื่อให้ถึง ≥ 7 วัน</li>
+  </ul>
+  <p class="foot">หน้า 2/6 · FloodLink</p>
+</section>
+
+<!-- ============================================================ หน้า 3 -->
+<section class="page">
+  <h2 style="margin-top:0">6. ผังต่อสาย (Wiring Diagram) — กล่องบ้าน</h2>
+  <p class="src">ที่มา: <span class="mono">docs/wiring-breadboard.md</span> ข้อ 1 · เลขขาตรงกับ <span class="mono">firmware/common/pins.h</span> · ทุกค่า R/C และขาเป็น <b>ค่าออกแบบ</b> รอเช็กกับชื่อขาบนโมดูลจริง</p>
+  <svg id="house" viewBox="0 0 1080 600" width="100%"></svg>
+  <p style="font-size:9.2pt">
+    <span class="key" style="background:var(--red)"></span>ไฟเลี้ยง
+    <span class="key" style="background:var(--gnd)"></span>กราวด์
+    <span class="key" style="background:var(--blue)"></span>ข้อมูล
+    <span class="key" style="background:var(--aud)"></span>เสียง
+    <span class="key" style="background:#9c9a92"></span>ว่าง
+    &nbsp;· ↑3V3 = ดึงขึ้น 3V3 · ↓GND = ลง GND
+  </p>
+  <div class="warn"><b>ข้อห้าม:</b> ห้ามจ่าย 5V เข้าโมดูลวิทยุ (ใช้ 3.3V เท่านั้น) · ห้ามส่งสัญญาณตอนไม่มีเสา · ห้ามต่อสายลำโพงลง GND · แหวนไฟตั้งความสว่างไม่เกิน 25% ในโค้ด (สว่างเต็ม 12 ดวง ≈ 720 mA)</div>
+  <h3>ไฟเลี้ยง</h3>
+  <table>
+    <tr><th>จุด</th><th>ต่อกับ</th><th>หมายเหตุ</th></tr>
+    <tr><td>ราง VSYS</td><td>ขา 5V ของบอร์ด (ได้ไฟจาก USB-C) · ถ่าน AA ×3 ผ่าน D2 1N5819 (แถบไปทาง VSYS) · แหวนไฟ 5V · PAM8403 +5V</td><td>C6 470 µF คร่อม VSYS–GND ใกล้บอร์ด</td></tr>
+    <tr><td>ราง 3V3</td><td>ขา 3V3 ของบอร์ด → SX1276 3.3V · R2 · R5</td><td>C7 10 µF + C8 100 nF ชิดขาไฟวิทยุ</td></tr>
+    <tr><td>GND</td><td>ทุกชิ้นต่อรวมกัน · รางบนกับรางล่างต่อถึงกัน</td><td>Breadboard บางแผ่นรางขาดกลางแผ่น ต้องต่อสายเชื่อม</td></tr>
+  </table>
+  <p class="foot">หน้า 3/6 · FloodLink</p>
+</section>
+
+<!-- ============================================================ หน้า 4 -->
+<section class="page">
+  <h2 style="margin-top:0">7. การจัดวางบน Breadboard (มองจากด้านบน)</h2>
+  <figure>
+    <img class="bbimg" src="bb-house-2d.png" alt="ผังกล่องบ้านบน Breadboard มองจากด้านบน">
+    <figcaption>กล่องบ้าน: แผ่นเต็ม = บอร์ด + วิทยุ + ปุ่ม + วัดถ่าน + สายวัดน้ำ · แผ่นครึ่ง = PAM8403 + ตัวกรองเสียง · 38 สาย 16 ชิ้น ทุกขาลงรูจริง (ผัง 3 มิติแบบหมุนดูได้ + โหมดสอนต่อทีละขั้น 68 ขั้น อยู่ในหน้าเว็บ <span class="mono">wiring/</span> แท็บ "Breadboard กล่องบ้าน")</figcaption>
+  </figure>
+  <h3>ตารางขา GPIO (กล่องบ้าน)</h3>
+  <table>
+    <tr><th>GPIO</th><th>ต่อกับ</th><th>GPIO</th><th>ต่อกับ</th></tr>
+    <tr><td class="mono">0</td><td>ปุ่มแดง + สายวัดน้ำเส้นแดง (ผ่าน R7)</td><td class="mono">5 / 6 / 7</td><td>วิทยุ MISO / SCK / MOSI (SPI)</td></tr>
+    <tr><td class="mono">1</td><td>วัดแรงดันถ่าน (R3/R4 1 MΩ)</td><td class="mono">8</td><td>วิทยุ NSS (R5 10 kΩ ↑3V3)</td></tr>
+    <tr><td class="mono">2</td><td>ปุ่มเขียว (R2 100 kΩ ↑3V3)</td><td class="mono">9</td><td>DIN แหวนไฟ (ผ่าน R8 330 Ω)</td></tr>
+    <tr><td class="mono">3</td><td>วิทยุ DIO0 (ส่งเสร็จ/รับได้)</td><td class="mono">10</td><td>วิทยุ RESET</td></tr>
+    <tr><td class="mono">4</td><td>ว่าง (สวิตช์ตัดไฟของกล่องจริงรุ่นถัดไป)</td><td class="mono">20 / 21</td><td>เสียง PWM → ตัวกรอง → PAM8403 · สายวัดน้ำเส้นดำ (R13)</td></tr>
+  </table>
+  <h3>ลำดับต่อและทดสอบ (ห้ามข้ามขั้น)</h3>
+  <ol style="margin:4px 0; padding-left:20px; font-size:9.8pt">
+    <li>บัดกรีสายเข้าโมดูลวิทยุ แหวนไฟ PAM8403 และขาปุ่ม · ต่อเสาเป็นจุดสุดท้าย</li>
+    <li>เช็กด้วยมัลติมิเตอร์ก่อนจ่ายไฟ: 3.3V กับ GND ต้องไม่ลัดกัน · ลำโพง 3–8 Ω</li>
+    <li>ต่อตัวรับก่อน → อัปโปรแกรมทดสอบ → วิทยุเริ่มทำงานได้</li>
+    <li>กล่องบ้านแค่บอร์ด + วิทยุ → ทดสอบส่งไป-กลับ 50 ครั้ง <b>ผ่าน = ได้คำตอบ ≥ 48 ครั้ง</b> ก่อนต่อชิ้นอื่น</li>
+    <li>เพิ่มทีละชิ้น ทดสอบทีละชิ้น: ปุ่มแดง → ปุ่มเขียว → แหวนไฟ → เสียง → วัดถ่าน → สายวัดน้ำ → ตัดไฟบ้าน</li>
+  </ol>
+  <p class="foot">หน้า 4/6 · FloodLink</p>
+</section>
+
+<!-- ============================================================ หน้า 5 -->
+<section class="page">
+  <h2 style="margin-top:0">8. ผังต่อสาย — ตัวรับ</h2>
+  <div class="grid2" style="align-items:start">
+    <svg id="rx" viewBox="0 0 560 330" width="100%"></svg>
+    <figure style="margin:0">
+      <img class="rximg" src="bb-rx-2d.png" alt="ตัวรับบน Breadboard">
+      <figcaption>ตัวรับบน Breadboard: 11 สาย 3 ชิ้น · ขาวิทยุเหมือนกล่องบ้านทุกขา ใช้โค้ดวิทยุชุดเดียวกัน · ไฟและข้อมูลมาทางสาย USB-C เส้นเดียวจากโน้ตบุ๊ก</figcaption>
+    </figure>
+  </div>
+
+  <h2>9. สิ่งที่ทำได้แล้ว และผลทดสอบ</h2>
+  <table>
+    <tr><th>เรื่อง</th><th>ผล</th><th>หลักฐาน</th></tr>
+    <tr><td>เฟิร์มแวร์กล่องบ้าน ตัวรับ และโปรแกรมทดสอบวิทยุ (4 โปรแกรม)</td><td class="ok">คอมไพล์สำหรับ ESP32-C3 ผ่าน 0 error</td><td class="mono">docs/test-logs/a1-compile.log</td></tr>
+    <tr><td>ตรรกะ: ปุ่มสั้น/ค้าง 2 วิ · ส่งซ้ำ · "ยังอยู่" · ขาดการติดต่อ · 1 บ้าน = 1 คำขอ</td><td class="ok">จำลองบนคอมพิวเตอร์ ผ่าน 52/52 กรณี (ยังไม่ใช่กล่องจริง)</td><td class="mono">a2-native-tests.log</td></tr>
+    <tr><td>ตัวรับ → แดชบอร์ด (โปรแกรมตัวรับจริงรันบนคอม วิทยุจำลอง)</td><td class="ok">23/23 ข้อ ผ่าน</td><td class="mono">a3-dashboard-serial.log</td></tr>
+    <tr><td>ผังต่อสายตรงกับเอกสารและเลขขาในโค้ด</td><td class="ok">ตรงทุกเส้น (ตัวเช็กอัตโนมัติจับข้อผิดที่ใส่ไว้ได้ 8/8)</td><td class="mono">wiring/breadboard-check.js</td></tr>
+    <tr><td>อุปกรณ์จริง</td><td class="ok">ซื้อครบและได้รับแล้ว</td><td>ใบสั่งซื้อ 26 ต.ค.</td></tr>
+    <tr><td>วิทยุส่งไป-กลับ 50 ครั้ง ระยะ 1–3 ม.</td><td class="pend">[รอผล] / 50</td><td>log สองฝั่ง</td></tr>
+    <tr><td>กดแดง → ตัวรับได้ → ไฟเหลืองกลับมา</td><td class="pend">[รอผล] / 10</td><td>log + คลิป</td></tr>
+    <tr><td>ระยะส่งในอาคาร / กลางแจ้ง</td><td class="pend">[รอผล] ม.</td><td>แบบฟอร์ม <span class="mono">docs/test-plan.md</span></td></tr>
+  </table>
+  <p class="note">ระยะ LoRa จากงานวิจัย (ไม่ใช่ผลของกล่องเรา): ในเมือง เสาสูง 1.5 ม. ส่งได้ราว 1 กม. — Callebaut et al. 2019 · ไกลสุดเกิน 15 กม. บนพื้น (868 MHz, 14 dBm) — Petäjäjärvi et al. 2015 · ระยะของกล่องเราจะใส่หลังวัดจริงเท่านั้น</p>
+
+  <h2>10. แผนการพัฒนา</h2>
+  <table>
+    <tr><th>ช่วง</th><th>ทำอะไร</th><th>เกณฑ์ผ่าน</th></tr>
+    <tr><td>ตอนนี้</td><td>เช็กชื่อขาบนโมดูลจริง → ต่อตัวรับ → ต่อกล่องบ้าน</td><td>วิทยุเริ่มทำงานทั้งสองฝั่ง</td></tr>
+    <tr><td>8–9 พ.ย.</td><td>ทดสอบซ้ำจนใช้งานได้จริง: ส่งไป-กลับ · ปุ่ม · ไฟ · เสียง · ถ่าน · สายวัดน้ำ · ระยะส่ง</td><td>ส่งถึง ≥ 96% · กดแดง 10/10 · สีไฟแยกออก</td></tr>
+    <tr><td>หลังทดสอบผ่าน</td><td>ประสานงานกับ อบต. เพื่อนำไปลองใช้ในชุมชนจริง เมื่อกล่องทดสอบผ่านจนใช้งานได้ในระดับหนึ่ง</td><td>ได้บ้านนำร่องและความเห็นจาก อสม.</td></tr>
+    <tr><td>14 พ.ย.</td><td>สาธิตของจริงที่ สจล. พร้อมผลทดสอบทุกข้อ</td><td>ทุกตัวเลขมาจากการวัด</td></tr>
+  </table>
+  <p class="foot">หน้า 5/6 · FloodLink</p>
+</section>
+
+<!-- ============================================================ หน้า 6 -->
+<section class="page">
+  <h2 style="margin-top:0">11. ใครซื้อ (Business Model)</h2>
+  <div class="grid3">
+    <div class="card"><b class="t">1. อบต. / เทศบาล <span class="tag" style="border-color:var(--grn);color:var(--grn)">ลูกค้าหลัก</span></b>ติดบ้านเปราะบางที่ อสม. ลงทะเบียนดูแลอยู่แล้ว ใช้ทั้งหน้าน้ำ (เตือน + ขอช่วย) และทั้งปี (ปุ่มฉุกเฉินในบ้าน) · ติดตั้งและลงทะเบียนผ่าน อสม.</div>
+    <div class="card"><b class="t">2. ครอบครัว</b>ที่มีพ่อแม่สูงอายุอยู่บ้านคนเดียว ปุ่มเดียวที่บอกทีมในชุมชนได้ว่าบ้านไหน ใครอยู่ — ขายเป็นชุดหรือแพ็กเกจผ่านผู้ให้บริการดูแลผู้สูงอายุ</div>
+    <div class="card"><b class="t">3. ที่พักและชุมชนห่างไกล</b>รีสอร์ต หอพัก หมู่บ้านบนดอย หรือพื้นที่เสี่ยงดินถล่ม ที่สัญญาณมือถือไม่แน่นอน ต้องการปุ่มขอความช่วยเหลือที่ใช้ได้แม้ไฟดับ</div>
+  </div>
+
+  <h3>ต้นทุน (ราคาซื้อจริง 26 ต.ค. — ชุด Prototype)</h3>
+  <table>
+    <tr><th>ชิ้นส่วน (กล่องบ้าน)</th><th>บาท</th><th>ชิ้นส่วน</th><th>บาท</th></tr>
+    <tr><td>ESP32-C3 Super Mini</td><td>125</td><td>PAM8403 เครื่องขยายเสียง</td><td>50</td></tr>
+    <tr><td>วิทยุ SX1276 915 MHz</td><td>310</td><td>แหวนไฟ WS2812 12 ดวง</td><td>38</td></tr>
+    <tr><td>ปุ่มแดง 60 มม. / ปุ่มเขียว 46 มม.</td><td>70 / 60</td><td>รางถ่าน AA ×3 · ตัวเก็บประจุ · ไดโอด · ตัวต้านทาน</td><td>รวมในยอด</td></tr>
+    <tr><th>ต้นทุนต่อกล่องบ้าน (ถ้าทำเพิ่ม)</th><th>≈ 850</th><th>ต้นทุนตัวรับ 1 จุด (ใช้ร่วมทั้งชุมชน)</th><th>≈ 500</th></tr>
+    <tr><th>ราคาขายกล่องบ้าน</th><th>≈ 1,445</th><th>ราคาขายตัวรับ</th><th>≈ 850</th></tr>
+  </table>
+  <p class="src">ต้นทุนต่อกล่องรวมกล่องกันน้ำ แผ่นวงจร ลำโพง และถ่าน — <b>ประมาณการ</b> จาก <span class="mono">docs/parts.md</span> · ราคาสูงกว่ารุ่นที่ออกแบบไว้เดิมเพราะ SX1276 ที่ซื้อได้ในไทยแพงกว่า · รุ่นผลิตจริงวางแผนใช้ SX1262 (คุยกับ SX1276 ได้)</p>
+
+  <h2>12. ความเสี่ยงและทางแก้</h2>
+  <table>
+    <tr><th>ความเสี่ยง</th><th>ทางแก้</th></tr>
+    <tr><td>วิทยุส่งไม่ไกลพอในชุมชน</td><td>วัดระยะจริงก่อน · ตั้งตัวรับจุดสูง · เพิ่ม SF · แผนต่อยอด: กล่องช่วยส่งต่อสัญญาณกันเอง</td></tr>
+    <tr><td>คนในบ้านกดไม่ได้ (ติดเตียง หมดสติ)</td><td>สายวัดน้ำขอแทนอัตโนมัติ · "ขาดการติดต่อ" เมื่อกล่องเงียบ · บ้านที่ไม่ตอบคำเตือนขึ้นรายการให้ อสม. ไปเคาะ</td></tr>
+    <tr><td>สายวัดน้ำเตือนผิด (ไอน้ำ แมลง)</td><td>ต้องแตะน้ำต่อเนื่อง 30 วิ · รอ 2 ชม. ก่อนขอแทน · อสม. ยืนยันก่อนส่งเรือ</td></tr>
+    <tr><td>ถ่านหมดระหว่างไฟดับ</td><td>เตือนถ่านอ่อน (&lt; 3.9 V) ทั้งที่กล่องและแดชบอร์ด · รุ่นถัดไปเพิ่มสวิตช์ตัดไฟ</td></tr>
+    <tr><td>กฎหมายคลื่นความถี่</td><td>ล็อกความถี่ 920–925 MHz และ EIRP ≤ 17 dBm ไว้ในโค้ด (คอมไพล์ไม่ผ่านถ้าตั้งผิด)</td></tr>
+  </table>
+
+  <h2>13. แหล่งอ้างอิง</h2>
+  <ul class="src" style="font-size:8.4pt">
+    <li>Thai PBS — ศป.กฉ. สรุปยอดเสียชีวิตน้ำท่วมใต้ 162 คน (30 พ.ย. 2568): https://www.thaipbs.or.th/program/SouthFloods68/watch/p9wtebfhaj1l</li>
+    <li>Thai PBS ข่าวค่ำ — น้ำท่วมใต้ กับการช่วยเหลือที่ยังไปไม่ถึง (24 พ.ย. 2568): https://www.thaipbs.or.th/program/EveningNews/episodes/111779</li>
+    <li>กรุงเทพธุรกิจ — Cell Broadcast และการขอความช่วยเหลือ: https://www.bangkokbiznews.com/tech/ai/1209690</li>
+    <li>สำนักงานสถิติแห่งชาติ — การใช้อินเทอร์เน็ตของผู้สูงอายุ: https://www.nso.go.th/nsoweb/storage/survey_detail/2025/20250228090924_27941.pdf</li>
+    <li>Callebaut et al. 2019 (EuCNC) — https://arxiv.org/abs/1909.08300 · Petäjäjärvi et al. 2015 (ITST) — Nokia Bell Labs</li>
+    <li>US National Weather Service — น้ำไหลลึก 6 นิ้วพัดผู้ใหญ่ล้มได้ (เหตุผลของคำว่า "อย่าลงน้ำ"): https://www.weather.gov/box/flood_safety</li>
+  </ul>
+  <p class="foot">หน้า 6/6 · FloodLink · ต้นแบบเพื่อการศึกษา · ค่าที่ยังไม่ได้วัดเป็นค่าออกแบบหรือประมาณการ</p>
+</section>
+
+<script>
+// ผังต่อสายแบบป้ายชื่อสาย (net label): ข้อมูลตาม docs/wiring-breadboard.md ข้อ 1–2 และ firmware/common/pins.h
+const C = { power: '#b4462f', ground: '#1f1f1d', data: '#2e6db4', audio: '#7a4fb0', none: '#9c9a92' };
+const NS = 'http://www.w3.org/2000/svg';
+function el(svg, tag, a, text) { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); if (text != null) e.textContent = text; svg.appendChild(e); return e; }
+function box(svg, x, y, w, h, title, sub) {
+  el(svg, 'rect', { x, y, width: w, height: h, rx: 8, fill: '#fff', stroke: '#1f1f1d', 'stroke-width': 2.5 });
+  el(svg, 'text', { x: x + w / 2, y: y + 26, 'text-anchor': 'middle', 'font-size': 17, 'font-weight': 700 }, title);
+  if (sub) el(svg, 'text', { x: x + w / 2, y: y + 46, 'text-anchor': 'middle', 'font-size': 12.5, fill: '#5f5e5a' }, sub);
+}
+function pin(svg, x, y, name, side) {
+  el(svg, 'text', { x: side === 'l' ? x + 8 : x - 8, y: y + 4.5, 'text-anchor': side === 'l' ? 'start' : 'end', 'font-size': 13.5, 'font-family': 'Consolas, monospace', 'font-weight': 600 }, name);
+  el(svg, 'circle', { cx: x, cy: y, r: 3.5, fill: '#1f1f1d' });
+}
+function label(svg, x, y, text, type, anchor) {
+  el(svg, 'text', { x, y: y + 4.5, 'text-anchor': anchor, 'font-size': 13.2, fill: type === 'none' ? '#7a7870' : '#1f1f1d' }, text);
+}
+
+// ---- กล่องบ้าน
+(function () {
+  const s = document.getElementById('house');
+  const X0 = 440, X1 = 600, Y = (i) => 112 + i * 52;
+  box(s, X0, 50, X1 - X0, 470, 'ESP32-C3', 'Super Mini');
+  const L = [['5V', 'power', 'ราง VSYS ← USB-C (ไฟบ้าน) · ถ่าน AA×3 → D2 1N5819'],
+             ['GND', 'ground', 'GND รวมทุกชิ้น (รางบน + รางล่างต่อกัน)'],
+             ['3V3', 'power', 'ราง 3V3 → วิทยุ 3.3V · R2 · R5'],
+             ['GPIO4', 'none', 'ว่าง (สวิตช์ตัดไฟของรุ่นถัดไป)'],
+             ['GPIO3', 'data', 'วิทยุ DIO0'],
+             ['GPIO2', 'data', 'ปุ่มเขียว NO (COM→GND) · R2 100kΩ ↑3V3'],
+             ['GPIO1', 'data', '+ถ่าน → R3 1MΩ · R4 1MΩ ↓GND · C2 100nF ↓GND'],
+             ['GPIO0', 'data', 'ปุ่มแดง NO (COM→GND) · C1 100nF ↓GND · สายวัดน้ำแดง → R7 10kΩ']];
+  L.forEach(([n, t, txt], i) => {
+    el(s, 'line', { x1: X0, y1: Y(i), x2: X0 - 26, y2: Y(i), stroke: C[t], 'stroke-width': 4 });
+    pin(s, X0, Y(i), n, 'l'); label(s, X0 - 32, Y(i), txt, t, 'end');
+  });
+  // ฝั่งขวา: วิทยุต่อตรง
+  const SX = 770, SW = 150;
+  box(s, SX, 70, SW, 230, 'SX1276', '915 MHz');
+  const R = [['GPIO5', 'data', 'MISO'], ['GPIO6', 'data', 'SCK'], ['GPIO7', 'data', 'MOSI'], ['GPIO8', 'data', 'NSS'], ['GPIO9', 'data', null], ['GPIO10', 'data', 'RESET'], ['GPIO20', 'audio', null], ['GPIO21', 'data', null]];
+  R.forEach(([n, t, rp], i) => {
+    pin(s, X1, Y(i), n, 'r');
+    if (rp && i < 4) el(s, 'line', { x1: X1, y1: Y(i), x2: SX, y2: Y(i), stroke: C[t], 'stroke-width': 4 });
+    else el(s, 'line', { x1: X1, y1: Y(i), x2: X1 + 26, y2: Y(i), stroke: C[t], 'stroke-width': 4 });
+  });
+  label(s, X1 + 32, Y(5), 'วิทยุ RESET', 'data', 'start');
+  el(s, 'text', { x: SX + SW / 2, y: 290, 'text-anchor': 'middle', 'font-size': 12, 'font-family': 'Consolas, monospace', 'font-weight': 600 }, 'RESET ← GPIO10');
+  // ป้ายขาวิทยุฝั่งซ้ายของกล่อง (MISO SCK MOSI NSS)
+  ['MISO', 'SCK', 'MOSI', 'NSS'].forEach((p, i) => el(s, 'text', { x: SX + 8, y: Y(i) + 4.5, 'font-size': 12.5, 'font-family': 'Consolas, monospace', 'font-weight': 600 }, p));
+  // R5 ดึงขึ้น NSS
+  el(s, 'rect', { x: 680, y: Y(3) - 9, width: 44, height: 18, fill: '#fff', stroke: '#1f1f1d', 'stroke-width': 1.5 });
+  el(s, 'text', { x: 702, y: Y(3) - 14, 'text-anchor': 'middle', 'font-size': 11.5 }, 'R5 10kΩ ↑3V3');
+  // ฝั่งขวาของกล่องวิทยุ
+  [['3.3V', 'power', '← ราง 3V3 (ห้าม 5V)'], ['GND', 'ground', '→ GND'], ['DIO0', 'data', '→ GPIO3'], ['ANT', 'data', 'เสาสปริง ~8 ซม.']].forEach(([p, t, txt], i) => {
+    const y = 100 + i * 38;
+    el(s, 'text', { x: SX + SW - 8, y: y + 4.5, 'text-anchor': 'end', 'font-size': 12.5, 'font-family': 'Consolas, monospace', 'font-weight': 600 }, p);
+    el(s, 'line', { x1: SX + SW, y1: y, x2: SX + SW + 14, y2: y, stroke: C[t], 'stroke-width': 4 });
+    el(s, 'text', { x: SX + SW + 18, y: y + 4.5, 'font-size': 13, fill: '#1f1f1d' }, txt);
+  });
+  el(s, 'text', { x: SX + SW / 2, y: 240, 'text-anchor': 'middle', 'font-size': 11.5, fill: '#5f5e5a' }, 'C7 10µF + C8 100nF');
+  el(s, 'text', { x: SX + SW / 2, y: 256, 'text-anchor': 'middle', 'font-size': 11.5, fill: '#5f5e5a' }, 'ชิดขาไฟ 3.3V–GND');
+  // ป้าย GPIO9 / 20 / 21
+  label(s, X1 + 32, Y(4), 'R8 330Ω → แหวน WS2812 12 ดวง DIN', 'data', 'start');
+  label(s, X1 + 32, Y(6), 'R9 2.2kΩ → (C4 10nF ↓GND) → C5 1µF → PAM8403 INL', 'audio', 'start');
+  label(s, X1 + 32, Y(7), 'R13 1kΩ → สายวัดน้ำเส้นดำ (ดึงลงเฉพาะตอนอ่าน)', 'data', 'start');
+  // ชิ้นที่ต่อเฉพาะไฟ
+  const y0 = 548;
+  el(s, 'text', { x: 10, y: y0, 'font-size': 13.2, 'font-weight': 700 }, 'ต่อเฉพาะไฟ:');
+  el(s, 'text', { x: 100, y: y0, 'font-size': 13.2 }, 'แหวนไฟ 5V → VSYS, GND → GND  ·  PAM8403 +5V → VSYS, GND และ INR → GND, OUTL+/OUTL− → ลำโพง (ห้ามลง GND)  ·  C6 470µF คร่อม VSYS–GND');
+  el(s, 'text', { x: 10, y: y0 + 24, 'font-size': 12.5, fill: '#5f5e5a' }, 'ปุ่มแดงกับสายวัดน้ำใช้ขาเดียวกัน (GPIO0) ได้ เพราะสายวัดน้ำมีไฟเฉพาะตอนอ่าน 30 ms ทุก 60 วิ — ปุ่มกด < 0.15 V · น้ำ 0.15–2.0 V (ค่าออกแบบ)');
+})();
+
+// ---- ตัวรับ
+(function () {
+  const s = document.getElementById('rx');
+  const X0 = 30, X1 = 180, Y = (i) => 70 + i * 40;
+  box(s, X0, 20, X1 - X0, 290, 'ESP32-C3', 'ตัวรับ');
+  const P = [['3V3', 'power', '3.3V'], ['GND', 'ground', 'GND'], ['GPIO5', 'data', 'MISO'], ['GPIO6', 'data', 'SCK'], ['GPIO7', 'data', 'MOSI'], ['GPIO8', 'data', 'NSS'], ['GPIO3', 'data', 'DIO0']];
+  const SX = 360;
+  box(s, SX, 20, 150, 290, 'SX1276', '915 MHz');
+  P.forEach(([n, t, rp], i) => {
+    pin(s, X1, Y(i), n, 'r');
+    el(s, 'line', { x1: X1, y1: Y(i), x2: SX, y2: Y(i), stroke: C[t], 'stroke-width': 4 });
+    el(s, 'text', { x: SX + 8, y: Y(i) + 4.5, 'font-size': 12.5, 'font-family': 'Consolas, monospace', 'font-weight': 600 }, rp);
+  });
+  pin(s, X1, Y(7) - 10, 'GPIO10', 'r');
+  el(s, 'line', { x1: X1, y1: Y(7) - 10, x2: SX, y2: Y(7) - 10, stroke: C.data, 'stroke-width': 4 });
+  el(s, 'text', { x: SX + 8, y: Y(7) - 5.5, 'font-size': 12.5, 'font-family': 'Consolas, monospace', 'font-weight': 600 }, 'RESET');
+  el(s, 'text', { x: 270, y: Y(0) - 8, 'text-anchor': 'middle', 'font-size': 11.5, fill: '#5f5e5a' }, '10µF + 100nF ชิดขาไฟ');
+  el(s, 'text', { x: 270, y: Y(5) - 8, 'text-anchor': 'middle', 'font-size': 11.5, fill: '#5f5e5a' }, '10kΩ ↑3V3');
+  el(s, 'text', { x: SX + 142, y: Y(6) + 4.5, 'text-anchor': 'end', 'font-size': 12.5, 'font-family': 'Consolas, monospace', 'font-weight': 600 }, 'ANT → เสา');
+  el(s, 'text', { x: X0 + 75, y: 300, 'text-anchor': 'middle', 'font-size': 12, fill: '#5f5e5a' }, 'USB-C → โน้ตบุ๊ก');
+})();
+</script>
+</body>
+</html>

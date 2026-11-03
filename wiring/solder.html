@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>จุดบัดกรีทั้งหมด — FloodLink</title>
+  <meta name="description" content="รายการจุดบัดกรีทุกจุดของกล่องบ้านและตัวรับ รอบ Breadboard วาดขาตามชิ้นจริง พิมพ์ให้ช่างบัดกรีได้">
+  <link rel="icon" href="data:,">
+  <style>
+    :root {
+      --paper: #F3F2EE; --panel: #FFFFFF; --rule: #DAD8D0; --frame: #9C9A92; --ink: #1F1F1D; --ink2: #5F5E5A;
+      --th: "Leelawadee UI", "Noto Sans Thai", Tahoma, sans-serif; --mono: Consolas, "Cascadia Mono", monospace;
+      color-scheme: light;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body { background: var(--paper); color: var(--ink); font-family: var(--th); font-size: 15px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+    ::selection { background: #2E6DB4; color: #fff; }
+    :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 20px 16px 48px; }
+    .top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--rule); padding-bottom: 14px; }
+    .top a.back { color: var(--ink2); text-decoration: none; font-size: 14px; }
+    .top a.back:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+    h1 { margin: 4px 0 2px; font-size: 26px; font-weight: 600; text-wrap: balance; }
+    .sub { margin: 0; color: var(--ink2); }
+    .btn { font: inherit; font-size: 14px; cursor: pointer; background: var(--ink); color: #fff; border: 1px solid var(--ink); border-radius: 3px; padding: 8px 14px; }
+    .btn:hover { background: #000; }
+    .sum { margin: 14px 0 0; }
+    .rules { margin: 18px 0 28px; padding: 14px 18px; background: var(--panel); border: 1px solid var(--rule); border-radius: 4px; }
+    .rules h2 { font-size: 17px; margin: 0 0 6px; }
+    .rules ol { margin: 0; padding-left: 22px; }
+    .rules li { margin: 3px 0; max-width: 75ch; }
+    .part { background: var(--panel); border: 1px solid var(--rule); border-radius: 4px; padding: 16px 18px 18px; margin: 0 0 18px; break-inside: avoid; }
+    .part header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-bottom: 10px; }
+    .part h2 { font-size: 19px; margin: 0; }
+    .qty { margin: 0; color: var(--ink2); }
+    .body { display: grid; grid-template-columns: minmax(240px, 340px) 1fr; gap: 18px; align-items: start; }
+    figure { margin: 0; }
+    figure svg { width: 100%; height: auto; display: block; }
+    figcaption { font-size: 13px; color: var(--ink2); margin-top: 4px; }
+    svg .pl { font: 600 13px var(--mono); fill: #1F1F1D; }
+    svg .pl.ring { fill: #F3F2EE; }
+    svg .pl.off { fill: #9C9A92; font-weight: 400; }
+    svg .sl { font: 600 12px var(--mono); }
+    svg .bn { font: 700 12px var(--th); fill: #fff; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { text-align: left; font-weight: 600; font-size: 12.5px; color: var(--ink2); border-bottom: 1px solid var(--frame); padding: 4px 6px; }
+    td { border-bottom: 1px solid var(--rule); padding: 6px; vertical-align: top; }
+    td.n { width: 34px; }
+    .bdg { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: #fff; font-weight: 700; font-size: 12px; }
+    .sw { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+    .hole { display: block; color: var(--ink2); font-size: 12px; }
+    td.tip { color: var(--ink2); font-size: 13px; }
+    ul.warn { margin: 10px 0 0; padding: 8px 12px 8px 28px; background: #F6F1E4; border-radius: 3px; font-size: 13.5px; }
+    ul.warn li { margin: 2px 0; }
+    .info.wide { overflow-x: auto; }
+    @media (max-width: 760px) { .body { grid-template-columns: 1fr; } .info { overflow-x: auto; } table { min-width: 560px; } }
+    @media print {
+      @page { size: A4; margin: 12mm; }
+      body { background: #fff; font-size: 12.5px; }
+      .wrap { padding: 0; max-width: none; }
+      .btn, .top a.back { display: none; }
+      .part, .rules { border-color: #bbb; }
+      .body { grid-template-columns: 300px 1fr; }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <a class="back" href="./?tab=bbHouse">← กลับผังต่อสาย</a>
+        <h1>จุดบัดกรีทั้งหมด</h1>
+        <p class="sub">สำหรับช่างบัดกรี · FloodLink รอบ Breadboard (กล่องบ้าน + ตัวรับ)</p>
+      </div>
+      <button class="btn" type="button" onclick="print()">พิมพ์หน้านี้</button>
+    </div>
+    <p id="sum" class="sum">กำลังโหลด…</p>
+
+    <section class="rules">
+      <h2>วิธีทำ (ทุกชิ้น)</h2>
+      <ol>
+        <li>ทุกจุดคือ <b>บัดกรีสายไฟ 1 เส้นเข้ากับขาของชิ้น</b> แล้วปลายอีกด้านของสายจะเอาไปเสียบ breadboard</li>
+        <li>สายที่ใช้: <b>สายจัมเปอร์หัวเข็ม (ตัวผู้) ตัดครึ่ง</b> บัดกรีฝั่งที่ตัด ฝั่งหัวเข็มเก็บไว้เสียบ breadboard · ใช้สีตามคอลัมน์ "สีสาย" ถ้ามี</li>
+        <li><b>ติดป้ายที่ปลายหัวเข็มทุกเส้น</b> เขียนตามคอลัมน์ "จุด" (เช่น SCK, VCC) เจ้าของจะได้เสียบถูก</li>
+        <li>ชุบตะกั่วปลายสายก่อน · แตะหัวแร้งไม่เกิน 3 วินาทีต่อจุด · ระวังตะกั่วเชื่อมข้ามไปจุดข้าง ๆ</li>
+        <li>จุดที่เป็น<b>สีเทาในรูป ไม่ต้องบัดกรี</b></li>
+        <li>เสร็จแล้ววัดด้วยมัลติมิเตอร์โหมดเสียง: ปลายสายกับจุดของมันต้องดัง · จุดที่อยู่ติดกันต้องไม่ดัง · ไฟ (VCC / 5V) กับ GND ต้องไม่ดัง</li>
+        <li>ห้ามเสียบไฟระหว่างบัดกรี</li>
+      </ol>
+    </section>
+
+    <main id="parts"></main>
+  </div>
+  <noscript><p class="wrap">หน้านี้ต้องเปิด JavaScript · ดูรายการแบบตัวหนังสือได้ที่ docs/wiring-breadboard.md ข้อ 1–2</p></noscript>
+  <script type="module" src="solder.js"></script>
+</body>
+</html>

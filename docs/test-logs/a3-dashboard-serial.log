@@ -1,0 +1,176 @@
+# A3 แดชบอร์ดอ่านบรรทัดจากตัวรับ — 2026-10-29T16:18:55.297Z
+# ตัวรับ = firmware/host (common/gateway ตัวเดียวกับบอร์ด) + กล่องบ้านจำลอง (common/house_logic) ต่อกันด้วยวิทยุจำลอง
+# RSSI/SNR ในบรรทัดเหล่านี้เป็นค่าสมมติ (-70 / 9.0) ไม่ใช่ผลวัด · ภาพอยู่ที่ dashboard/_shots/a3-live/
+
+## ผล
+PASS  เปิดพอร์ตแล้วส่ง hello
+PASS  ได้ snap แล้วป้ายบนจอเป็น "เชื่อมต่อตัวรับอยู่" (ไม่ใช่จำลอง)
+PASS  บ้าน 1001 ขึ้นบนแผนที่ + แผงกล่อง "กล่องที่บ้านทดลอง 1" (ยังไม่เคยได้ยิน: last_seen=null)
+PASS  กล่องกดแดง → ตัวรับส่ง state sos
+PASS  จอขึ้นคำขอ "คนในบ้านกดปุ่มแดงขอความช่วยเหลือ" + ปุ่มรับเรื่อง
+PASS  กดรับเรื่อง → คำสั่ง accept ออกจากเว็บ + ตัวรับตอบ res ok
+PASS  กล่องได้ ACCEPTED แล้วตอบ BOX_ACK (delivered=true)
+PASS  กล่องจำลองเปลี่ยนเป็นสีเหลือง (accepted)
+PASS  จอขึ้น "ทีมรับเรื่องแล้ว เรือกำลังไป" + ปุ่มช่วยเสร็จ
+PASS  กดช่วยเสร็จ → done และคำขอปิด
+PASS  จอไม่มีปุ่มคำขอของบ้าน 1001 แล้ว
+PASS  กล่องจำลองได้ DONE (เขียว)
+PASS  ส่งคำเตือน → ตัวรับส่ง warn คืนนี้ + บ้านเป็น warn
+PASS  กล่องได้ WARN (ไฟส้ม)
+PASS  กล่องกดเขียว → heard + got_warn
+PASS  จอแสดงสถานะ "ได้ยินแล้ว"
+PASS  ถ่านอ่อน → low_batt
+PASS  น้ำแตะต่อเนื่อง 30 วิ → probe_wet
+PASS  ไม่มี hb 3 รอบ → แถบ "ขาดการเชื่อมต่อกับตัวรับ"
+PASS  ตัวรับกลับมา → แถบหายเอง
+PASS  ทุกบรรทัด JSON แปลงได้และมีช่องครบตาม contract (snap 13 · hb 80 · res 3)
+PASS  console ไม่มี error
+PASS  ไม่โหลดอะไรจากนอกเครื่อง
+
+สรุป: ผ่านทุกข้อ (23/23)
+
+## บรรทัดที่วิ่งผ่านสาย (เวลา วิ)
+   0.9  RX→web  # FloodLink receiver (host simulation: gateway + 1 simulated house box, simulated radio)
+   0.9  RX→web  # BOX state idle
+   1.4  RX→web  {"t":"snap","v":2,"rev":0,"now":0,"gw":{"name":"GW-01","sim":false,"link":"usb","air_pct":0.00},"cfg":{"silent_h":6,"auto_h":2,"probe_cm":50,"water_s":30,"repeat_min":10,"hold_s":2,"safe_hold_s":2,"hb_h":6,"offline_h":13,"low_batt_v":3.9,"link_hb_s":2},"warn":null,"houses":[{"id":1001,"name":"บ้านทดลอง 1","x":200,"y":105,"bed":true,"state":"idle","t_state":0,"got_warn":false,"last_seen":null,"offl …(530 chars)
+   1.5  web→rx  {"cmd":"hello","rid":1}
+   1.5  RX→web  {"t":"snap","v":2,"rev":0,"now":0,"gw":{"name":"GW-01","sim":false,"link":"usb","air_pct":0.00},"cfg":{"silent_h":6,"auto_h":2,"probe_cm":50,"water_s":30,"repeat_min":10,"hold_s":2,"safe_hold_s":2,"hb_h":6,"offline_h":13,"low_batt_v":3.9,"link_hb_s":2},"warn":null,"houses":[{"id":1001,"name":"บ้านทดลอง 1","x":200,"y":105,"bed":true,"state":"idle","t_state":0,"got_warn":false,"last_seen":null,"offl …(530 chars)
+   2.9  RX→web  {"t":"hb","rev":0,"now":2,"air_pct":0.00}
+   4.9  RX→web  {"t":"hb","rev":0,"now":4,"air_pct":0.00}
+   6.9  RX→web  {"t":"hb","rev":0,"now":6,"air_pct":0.00}
+   7.6  [ภาพ] 01-connected.png
+   7.6  test→rx box red long
+   7.6  RX→web  # BOX cmd red long
+   7.6  RX→web  # BOX state sos
+   8.9  RX→web  {"t":"hb","rev":0,"now":8,"air_pct":0.00}
+  10.5  RX→web  # RX SOS id=1001 seq=1 try=1 rssi=-70 snr=9.0 (simulated)
+  10.6  RX→web  {"t":"snap","v":2,"rev":1,"now":9,"gw":{"name":"GW-01","sim":false,"link":"usb","air_pct":0.00},"cfg":{"silent_h":6,"auto_h":2,"probe_cm":50,"water_s":30,"repeat_min":10,"hold_s":2,"safe_hold_s":2,"hb_h":6,"offline_h":13,"low_batt_v":3.9,"link_hb_s":2},"warn":null,"houses":[{"id":1001,"name":"บ้านทดลอง 1","x":200,"y":105,"bed":true,"state":"sos","t_state":9,"got_warn":false,"last_seen":9,"offline" …(655 chars)
+  10.6  RX→web  # TX ACK id=1001 seq=1
+  10.6  RX→web  # BOX voice V_SOS_SENT
+  10.9  RX→web  {"t":"hb","rev":1,"now":10,"air_pct":0.00}
+  13.0  RX→web  {"t":"hb","rev":1,"now":12,"air_pct":0.00}
+  15.0  RX→web  {"t":"hb","rev":1,"now":14,"air_pct":0.00}
+  17.0  RX→web  {"t":"hb","rev":1,"now":16,"air_pct":0.00}
+  19.0  RX→web  {"t":"hb","rev":1,"now":18,"air_pct":0.00}
+  21.0  RX→web  {"t":"hb","rev":1,"now":20,"air_pct":0.00}
+  23.0  RX→web  {"t":"hb","rev":1,"now":22,"air_pct":0.00}
+  25.0  RX→web  {"t":"hb","rev":1,"now":24,"air_pct":0.00}
+  27.0  RX→web  {"t":"hb","rev":1,"now":26,"air_pct":0.00}
+  29.1  RX→web  {"t":"hb","rev":1,"now":28,"air_pct":0.00}
+  31.1  RX→web  {"t":"hb","rev":1,"now":30,"air_pct":0.00}
+  33.1  RX→web  {"t":"hb","rev":1,"now":32,"air_pct":0.00}
+  33.1  [ภาพ] 02-sos.png
+  35.1  RX→web  {"t":"hb","rev":1,"now":34,"air_pct":0.00}
+  37.1  RX→web  {"t":"hb","rev":1,"now":36,"air_pct":0.00}
+  38.2  web→rx  {"cmd":"accept","rid":2,"id":1001}
+  38.3  RX→web  {"t":"res","rid":2,"ok":true,"rev":2}
+  38.3  RX→web  {"t":"snap","v":2,"rev":2,"now":37,"gw":{"name":"GW-01","sim":false,"link":"usb","air_pct":0.00},"cfg":{"silent_h":6,"auto_h":2,"probe_cm":50,"water_s":30,"repeat_min":10,"hold_s":2,"safe_hold_s":2,"hb_h":6,"offline_h":13,"low_batt_v":3.9,"link_hb_s":2},"warn":null,"houses":[{"id":1001,"name":"บ้านทดลอง 1","x":200,"y":105,"bed":true,"state":"accepted","t_state":37,"got_warn":false,"last_seen":9,"o …(693 chars)
+  38.3  RX→web  # TX ACCEPTED id=1001 seq=2
+  38.3  RX→web  # RX BOX_ACK id=1001 seq=2 try=0 rssi=-70 snr=9.0 (simulated)
+  38.3  RX→web  # BOX voice V_ACCEPTED
+  38.3  RX→web  # BOX state accepted
+  38.8  RX→web  {"t":"snap","v":2,"rev":3,"now":37,"gw":{"name":"GW-01","sim":false,"link":"usb","air_pct":0.01},"cfg":{"silent_h":6,"auto_h":2,"probe_cm":50,"water_s":30,"repeat_min":10,"hold_s":2,"safe_hold_s":2,"hb_h":6,"offline_h":13,"low_batt_v":3.9,"link_hb_s":2},"warn":null,"houses":[{"id":1001,"name":"บ้านทดลอง 1","x":200,"y":105,"bed":true,"state":"accepted","t_state":37,"got_warn":false,"last_seen":37," …(729 chars)
+  39.1  RX→web  {"t":"hb","rev":3,"now":38,"air_pct":0.01}
+  41.1  RX→web  {"t":"hb","rev":3,"now":40,"air_pct":0.01}
+  43.2  RX→web  {"t":"hb","rev":3,"now":42,"air_pct":0.01}
+  44.6  [ภาพ] 03-accepted.png
+  45.2  RX→web  {"t":"hb","rev":3,"now":44,"air_pct":0.01}
+  47.2  RX→web  {"t":"hb","rev":3,"now":46,"air_pct":0.01}
+  49.2  RX→web  {"t":"hb","rev":3,"now":48,"air_pct":0.01}
+  49.7  web→rx  {"cmd":"done","rid":3,"id":1001}
+  49.7  RX→web  {"t":"res","rid":3,"ok":true,"rev":4}
+  49.7  RX→web  {"t":"snap","v":2,"rev":4,"now":48,"gw":{"name":"GW-01","sim":false,"link":"usb","air_pct":0.01},"cfg":{"silent_h":6,"auto_h":2,"probe_cm":50,"water_s":30,"repeat_min":10,"hold_s":2,"safe_hold_s":2,"hb_h":6,"offline_h":13,"low_batt_v":3.9,"link_hb_s":2},"warn":null,"houses":[{"id":1001,"name":"บ้านทดลอง 1","x":200,"y":105,"bed":true,"state":"done","t_state":48,"got_warn":false,"last_seen":37,"offl …(656 chars)
+  49.7  RX→web  # TX DONE id=1001 seq=3
+  49.7  RX→web  # RX BOX_ACK id=1001 seq=3 try=0 rssi=-70 snr=9.0 (simulated)
+  49.7  RX→web  # BOX voice V_DONE
+  49.7  RX→web  # BOX state done
+  50.2  RX→web  {"t":"snap","v":2,"rev":5,"now":49,"gw":{"name":"GW-01","sim":false,"link":"usb","air_pct":0.01},"cfg":{"silent_h":6,"auto_h":2,"probe_cm":50,"water_s":30,"repeat_min":10,"hold_s":2,"safe_hold_s":2,"hb_h":6,"offline_h":13,"low_batt_v":3.9,"link_hb_s":2},"warn":null,"houses":[{"id":1001,"name":"บ้านทดลอง 1","x":200,"y":105,"bed":true,"state":"done","t_state":48,"got_warn":false,"last_seen":48,"offl …(692 chars)
+  51.2  RX→web  {"t":"hb","rev":5,"now":50,"air_pct":0.01}
+  51.8  [ภาพ] 04-done.png
+  53.2  RX→web  {"t":"hb","rev":5,"now":52,"air_pct":0.01}
+  55.3  RX→web  {"t":"hb","rev":5,"now":54,"air_pct":0.01}
+  57.3  RX→web  {"t":"hb","rev":5,"now":56,"air_pct":0.01}
+  59.3  RX→web  {"t":"hb","rev":5,"now":58,"air_pct":0.01}
+  61.3  RX→web  {"t":"hb","rev":5,"now":60,"air_pct":0.01}
+  63.3  RX→web  {"t":"hb","rev":5,"now":62,"air_pct":0.01}
+  65.3  RX→web  {"t":"hb","rev":5,"now":64,"air_pct":0.01}
+  67.3  RX→web  {"t":"hb","rev":5,"now":66,"air_pct":0.01}
+  67.4  web→rx  {"cmd":"warn","rid":4,"when":"tonight","lvl_cm":null}
+  67.4  RX→web  {"t":"res","rid":4,"ok":true,"rev":6}
+  67.4  RX→web  {"t":"snap","v":2,"rev":6,"now":66,"gw":{"name":"GW-01","sim":false,"link":"usb","air_pct":0.01},"cfg":{"silent_h":6,"auto_h":2,"probe_cm":50,"water_s":30,"repeat_min":10,"hold_s":2,"safe_hold_s":2,"hb_h":6,"offline_h":3,"low_batt_v":3.9,"link_hb_s":2},"warn":{"wid":1,"when":"tonight","lvl_cm":null,"t":66,"tx":1,"active":true},"houses":[{"id":1001,"name":"บ้านทดลอง 1","x":200,"y":105,"bed":true,"s …(788 chars)
+  67.4  RX→web  # TX WARN id=65535 seq=4
+  67.4  RX→web  # BOX voice V_WARN
+  67.4  RX→web  # BOX state warn
+  69.3  RX→web  {"t":"hb","rev":6,"now":68,"air_pct":0.02}
+  69.5  [ภาพ] 05-warn-sent.png
+  69.5  test→rx box green short
+  69.6  RX→web  # BOX cmd green short
+  69.6  RX→web  # BOX state heard
+  71.3  RX→web  {"t":"hb","rev":6,"now":70,"air_pct":0.02}
+  71.8  RX→web  # RX HEARD id=1001 seq=4 try=0 rssi=-70 snr=9.0 (simulated)
+  71.9  RX→web  {"t":"snap","v":2,"rev":7,"now":70,"gw":{"name":"GW-01","sim":false,"link":"usb","air_pct":0.02},"cfg":{"silent_h":6,"auto_h":2,"probe_cm":50,"water_s":30,"repeat_min":10,"hold_s":2,"safe_hold_s":2,"hb_h":6,"offline_h":3,"low_batt_v":3.9,"link_hb_s":2},"warn":{"wid":1,"when":"tonight","lvl_cm":null,"t":66,"tx":1,"active":true},"houses":[{"id":1001,"name":"บ้านทดลอง 1","x":200,"y":105,"bed":true,"s …(820 chars)
+  71.9  RX→web  # TX ACK id=1001 seq=5
+  71.9  RX→web  # BOX voice V_HEARD
+  73.4  RX→web  {"t":"hb","rev":7,"now":72,"air_pct":0.02}
+  75.4  RX→web  {"t":"hb","rev":7,"now":74,"air_pct":0.02}
+  77.4  RX→web  {"t":"hb","rev":7,"now":76,"air_pct":0.02}
+  79.0  [ภาพ] 06-heard.png
+  79.0  test→rx box batt 3.80
+  79.0  test→rx box wet 1
+  79.0  RX→web  # BOX cmd batt 3.80
+  79.0  RX→web  # BOX cmd wet 1
+  79.0  RX→web  # BOX voice V_LOW_BATT
+  79.4  RX→web  {"t":"hb","rev":7,"now":78,"air_pct":0.02}
+  81.3  RX→web  # RX STATUS id=1001 seq=5 try=1 rssi=-70 snr=9.0 (simulated)
+  81.3  RX→web  {"t":"snap","v":2,"rev":8,"now":80,"gw":{"name":"GW-01","sim":false,"link":"usb","air_pct":0.02},"cfg":{"silent_h":6,"auto_h":2,"probe_cm":50,"water_s":30,"repeat_min":10,"hold_s":2,"safe_hold_s":2,"hb_h":6,"offline_h":3,"low_batt_v":3.9,"link_hb_s":2},"warn":{"wid":1,"when":"tonight","lvl_cm":null,"t":66,"tx":1,"active":true},"houses":[{"id":1001,"name":"บ้านทดลอง 1","x":200,"y":105,"bed":true,"s …(854 chars)
+  81.3  RX→web  # TX ACK id=1001 seq=6
+  81.4  RX→web  {"t":"hb","rev":8,"now":80,"air_pct":0.02}
+  83.4  RX→web  {"t":"hb","rev":8,"now":82,"air_pct":0.02}
+  85.4  RX→web  {"t":"hb","rev":8,"now":84,"air_pct":0.02}
+  87.4  RX→web  {"t":"hb","rev":8,"now":86,"air_pct":0.02}
+  89.4  RX→web  {"t":"hb","rev":8,"now":88,"air_pct":0.02}
+  91.4  RX→web  {"t":"hb","rev":8,"now":90,"air_pct":0.02}
+  93.5  RX→web  {"t":"hb","rev":8,"now":92,"air_pct":0.02}
+  95.5  RX→web  {"t":"hb","rev":8,"now":94,"air_pct":0.02}
+  96.9  RX→web  {"t":"snap","v":2,"rev":9,"now":96,"gw":{"name":"GW-01","sim":false,"link":"usb","air_pct":0.02},"cfg":{"silent_h":6,"auto_h":2,"probe_cm":50,"water_s":30,"repeat_min":10,"hold_s":2,"safe_hold_s":2,"hb_h":6,"offline_h":3,"low_batt_v":3.9,"link_hb_s":2},"warn":{"wid":1,"when":"tonight","lvl_cm":null,"t":66,"tx":2,"active":true},"houses":[{"id":1001,"name":"บ้านทดลอง 1","x":200,"y":105,"bed":true,"s …(854 chars)
+  96.9  RX→web  # TX WARN id=65535 seq=7
+  97.5  RX→web  {"t":"hb","rev":9,"now":96,"air_pct":0.03}
+  99.5  RX→web  {"t":"hb","rev":9,"now":98,"air_pct":0.03}
+ 101.5  RX→web  {"t":"hb","rev":9,"now":100,"air_pct":0.03}
+ 103.5  RX→web  {"t":"hb","rev":9,"now":102,"air_pct":0.03}
+ 105.5  RX→web  {"t":"hb","rev":9,"now":104,"air_pct":0.03}
+ 107.5  RX→web  {"t":"hb","rev":9,"now":106,"air_pct":0.03}
+ 109.5  RX→web  {"t":"hb","rev":9,"now":108,"air_pct":0.03}
+ 111.6  RX→web  {"t":"hb","rev":9,"now":110,"air_pct":0.03}
+ 113.6  RX→web  {"t":"hb","rev":9,"now":112,"air_pct":0.03}
+ 115.6  RX→web  {"t":"hb","rev":9,"now":114,"air_pct":0.03}
+ 117.6  RX→web  {"t":"hb","rev":9,"now":116,"air_pct":0.03}
+ 119.6  RX→web  {"t":"hb","rev":9,"now":118,"air_pct":0.03}
+ 121.6  RX→web  {"t":"hb","rev":9,"now":120,"air_pct":0.03}
+ 123.6  RX→web  {"t":"hb","rev":9,"now":122,"air_pct":0.03}
+ 125.6  RX→web  {"t":"hb","rev":9,"now":124,"air_pct":0.03}
+ 126.9  RX→web  {"t":"snap","v":2,"rev":10,"now":126,"gw":{"name":"GW-01","sim":false,"link":"usb","air_pct":0.03},"cfg":{"silent_h":6,"auto_h":2,"probe_cm":50,"water_s":30,"repeat_min":10,"hold_s":2,"safe_hold_s":2,"hb_h":6,"offline_h":3,"low_batt_v":3.9,"link_hb_s":2},"warn":{"wid":1,"when":"tonight","lvl_cm":null,"t":66,"tx":3,"active":true},"houses":[{"id":1001,"name":"บ้านทดลอง 1","x":200,"y":105,"bed":true, …(856 chars)
+ 126.9  RX→web  # TX WARN id=65535 seq=8
+ 127.7  RX→web  {"t":"hb","rev":10,"now":126,"air_pct":0.03}
+ 129.7  RX→web  {"t":"hb","rev":10,"now":128,"air_pct":0.03}
+ 131.7  RX→web  {"t":"hb","rev":10,"now":130,"air_pct":0.03}
+ 133.7  RX→web  {"t":"hb","rev":10,"now":132,"air_pct":0.03}
+ 135.7  RX→web  {"t":"hb","rev":10,"now":134,"air_pct":0.03}
+ 137.7  RX→web  {"t":"hb","rev":10,"now":136,"air_pct":0.03}
+ 139.7  RX→web  {"t":"hb","rev":10,"now":138,"air_pct":0.03}
+ 141.7  RX→web  {"t":"hb","rev":10,"now":140,"air_pct":0.03}
+ 143.7  RX→web  {"t":"hb","rev":10,"now":142,"air_pct":0.03}
+ 145.8  RX→web  {"t":"hb","rev":10,"now":144,"air_pct":0.03}
+ 147.8  RX→web  {"t":"hb","rev":10,"now":146,"air_pct":0.03}
+ 149.8  RX→web  {"t":"hb","rev":10,"now":148,"air_pct":0.03}
+ 151.3  RX→web  # RX STATUS id=1001 seq=6 try=1 rssi=-70 snr=9.0 (simulated)
+ 151.4  RX→web  {"t":"snap","v":2,"rev":11,"now":150,"gw":{"name":"GW-01","sim":false,"link":"usb","air_pct":0.03},"cfg":{"silent_h":6,"auto_h":2,"probe_cm":50,"water_s":30,"repeat_min":10,"hold_s":2,"safe_hold_s":2,"hb_h":6,"offline_h":3,"low_batt_v":3.9,"link_hb_s":2},"warn":{"wid":1,"when":"tonight","lvl_cm":null,"t":66,"tx":3,"active":true},"houses":[{"id":1001,"name":"บ้านทดลอง 1","x":200,"y":105,"bed":true, …(892 chars)
+ 151.4  RX→web  # TX ACK id=1001 seq=9
+ 151.8  RX→web  {"t":"hb","rev":11,"now":150,"air_pct":0.04}
+ 153.8  [ภาพ] 07-lowbatt-wet.png
+ 153.8  RX→web  {"t":"hb","rev":11,"now":152,"air_pct":0.04}
+ 155.8  RX→web  {"t":"hb","rev":11,"now":154,"air_pct":0.04}
+ 157.9  RX→web  {"t":"hb","rev":11,"now":156,"air_pct":0.04}
+ 159.9  RX→web  {"t":"hb","rev":11,"now":158,"air_pct":0.04}
+ 160.4  [ภาพ] 08-link-lost.png
+ 161.9  RX→web  {"t":"hb","rev":11,"now":160,"air_pct":0.04}

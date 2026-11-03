@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ปุ่มเรียกเรือ รุ่น 2</title>
+<meta name="description" content="กล่องติดบ้านที่คุยกับทีมช่วยเหลือได้สองทาง ก่อนน้ำมาถามว่าได้ยินไหม พอน้ำมาแล้วก็ตอบว่าได้ยินแล้ว กำลังไป">
+<style>
+  :root {
+    --paper: #F3F2EE;
+    --card: #FFFFFF;
+    --grid: #DAD8D0;
+    --rule: #9C9A92;
+    --ink: #1F1F1D;
+    --ink-2: #5F5E5A;
+    --font-th: "Leelawadee UI", "Noto Sans Thai", Tahoma, sans-serif;
+    --font-mono: Consolas, "Cascadia Mono", monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-th);
+    line-height: 1.6;
+  }
+  main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 40px 16px 48px;
+  }
+  .tag {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--ink-2);
+    margin: 0 0 6px;
+  }
+  h1 { font-size: 2rem; margin: 0 0 4px; line-height: 1.3; }
+  .sub { font-size: 1.15rem; margin: 0 0 16px; color: var(--ink-2); }
+  .lead { margin: 0 0 28px; font-size: 1.05rem; }
+  .links { display: grid; gap: 12px; }
+  a.card {
+    display: block;
+    background: var(--card);
+    border: 1px solid var(--grid);
+    padding: 18px 18px 16px;
+    color: inherit;
+    text-decoration: none;
+  }
+  a.card:hover, a.card:focus-visible { border-color: var(--ink); }
+  a.card:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .card h2 { margin: 0 0 4px; font-size: 1.2rem; }
+  .card p { margin: 0; color: var(--ink-2); }
+  .go { display: inline-block; margin-top: 10px; font-weight: 600; }
+  footer {
+    margin-top: 28px;
+    padding-top: 12px;
+    border-top: 1px solid var(--grid);
+    color: var(--ink-2);
+    font-size: 0.9rem;
+  }
+</style>
+</head>
+<body>
+<main>
+  <p class="tag">รุ่น 2</p>
+  <h1>ปุ่มเรียกเรือ</h1>
+  <p class="sub">กล่องคุยสองทาง</p>
+  <p class="lead">กล่องติดบ้านที่คุยกับทีมช่วยเหลือได้สองทาง ก่อนน้ำมาถามว่า "ได้ยินไหม" พอน้ำมาแล้วก็ตอบว่า "ได้ยินแล้ว กำลังไป"</p>
+
+  <nav class="links">
+    <a class="card" href="dashboard/">
+      <h2>จอของทีมช่วยเหลือ</h2>
+      <p>ส่งคำเตือน ดูว่าบ้านไหนได้ยินแล้ว บ้านไหนยังเงียบ และรับเรื่องบ้านที่ขอความช่วยเหลือ</p>
+      <span class="go">เปิดหน้านี้ →</span>
+    </a>
+    <a class="card" href="exploded/">
+      <h2>ข้างในกล่องมีอะไร</h2>
+      <p>เลื่อนลงเพื่อดูกล่องแยกออกทีละชิ้น ดูว่าแต่ละชิ้นต่อกันอย่างไร แล้วลองกดกล่องเสมือนจริง</p>
+      <span class="go">เปิดหน้านี้ →</span>
+    </a>
+    <a class="card" href="wiring/">
+      <h2>ผังต่อสาย 3 มิติ</h2>
+      <p>กล่องบ้านและตัวรับ หมุนดูได้ จิ้มสายเพื่อดูว่าต่อจากขาไหนไปขาไหน พร้อมรายการให้ติ๊กตอนบัดกรีจริง</p>
+      <span class="go">เปิดหน้านี้ →</span>
+    </a>
+  </nav>
+
+  <footer>ทุกหน้าเป็นการจำลอง ข้อมูลบ้านเป็นของสมมติ</footer>
+</main>
+</body>
+</html>
