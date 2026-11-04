@@ -60,7 +60,7 @@ function breadboardMesh(T, K, cols, w, d, cx, cz, railLast, label) {
 
 // โมดูลวิทยุที่ได้มา = XL1276-P01 (ชิป SX1276) แผ่นฟ้า ~16 × 16 มม. ขาครึ่งรู 8 ขาต่อข้าง ห่าง ~2 มม. (ประมาณจากรูป ไม่ใช่ 2.54 → บัดกรีสาย)
 // มองด้านที่มีตัวหนังสือ (ด้านหลัง) วางทิศเดียวกับรูปใกล้ของผู้ใช้ 1 พ.ย. (ANT มุมขวาบน):
-// ซ้ายบนลงล่าง GND DIO5 RES NSS SCK MOSI MISO GND · ขวาบนลงล่าง ANT GND DIO3 DIO4 VCC DIO0 DIO1 DIO2
+// ซ้ายบนลงล่าง GND DIO5 REST NSS SCK MOSI MISO GND · ขวาบนลงล่าง ANT GND DIO3 DIO4 VCC DIO0 DIO1 DIO2
 function sx1276(T, K) {
   const g = new T.Group(); const pins = {}; const pinLabels = [];
   K.box(g, 16, 1.0, 16, 0x1f55b0, 0, 0.5, 0, { r: 0.55 });
@@ -69,8 +69,8 @@ function sx1276(T, K) {
   for (const [t, z] of [['433M', 1.6], ['868M', 3.2], ['915M', 4.8]]) K.print(g, t, 3.2, 1.0, 0, 1.02, z, { color: '#d8e4f5' });   // ตารางติ๊กย่าน (ย่อ)
   const L = ['GND', 'DIO5', 'RESET', 'NSS', 'SCK', 'MOSI', 'MISO', 'GND2'];
   const R = ['ANT', 'GND3', 'DIO3', 'DIO4', '3.3V', 'DIO0', 'DIO1', 'DIO2'];
-  const SILK = { '3.3V': 'VCC', RESET: 'RES' };
-  const TEXT = { '3.3V': 'VCC (3.3V เท่านั้น)', RESET: 'RES (RESET)' };
+  const SILK = { '3.3V': 'VCC', RESET: 'REST' };
+  const TEXT = { '3.3V': 'VCC (3.3V เท่านั้น)', RESET: 'REST (RESET)' };
   const used = new Set(['GND', 'MISO', 'MOSI', 'SCK', 'NSS', 'RESET', 'DIO0', '3.3V', 'ANT']);
   const pad = (n, x, z, anchor) => {
     const u = used.has(n) || /^GND/.test(n);
@@ -357,7 +357,7 @@ export function buildBBRx(T, K) {
 /* ------------------------------------------------------------- ชื่อขาแบบอ่านง่าย */
 const PART_NAME = { mcu: 'ESP32-C3', 'rx-mcu': 'ESP32-C3', sx: 'วิทยุ SX1276', 'rx-sx': 'วิทยุ SX1276', ant: 'เสาสปริง', 'rx-ant': 'เสาสปริง',
   'btn-sos': 'ปุ่มแดง', 'btn-ack': 'ปุ่มเขียว', ring: 'แหวนไฟ', amp: 'PAM8403', speaker: 'ลำโพง', battery: 'รางถ่าน', probe: 'สายวัดน้ำ' };
-const PIN_TH = { red: 'สายแดง', black: 'สายดำ', feed: 'จุดบัดกรี', '-': '−', 'L-': 'L−', LIN: 'LIN', RIN: 'RIN', COM: 'COM', DIN: 'DI', '3.3V': 'VCC', RESET: 'RES' };
+const PIN_TH = { red: 'สายแดง', black: 'สายดำ', feed: 'จุดบัดกรี', '-': '−', 'L-': 'L−', LIN: 'LIN', RIN: 'RIN', COM: 'COM', DIN: 'DI', '3.3V': 'VCC', RESET: 'REST' };
 export function bbShort(name) {
   if (RAIL_NAME[name]) return RAIL_NAME[name].replace(' (ครึ่งขวา)', ' ขวา');
   const i = name.indexOf('.'); const id = name.slice(0, i); const pin = name.slice(i + 1);
@@ -369,7 +369,7 @@ export function bbDetail(name, values) {
   if (RAIL_NAME[name]) return { part: RAIL_NAME[name], pin: name.startsWith('hb.') ? 'รางของแผ่นครึ่ง' : 'ทุกรูในแนวเส้นสีเดียวกันต่อกัน (เฉพาะครึ่งแผ่นเดียวกัน)' };
   const i = name.indexOf('.'); const id = name.slice(0, i); const pin = name.slice(i + 1);
   if (id === 'mcu' || id === 'rx-mcu') return { part: 'ESP32-C3 Super Mini', pin: `ขา ${pin} (เทียบชื่อที่พิมพ์บนบอร์ดจริง)` };
-  if (id === 'sx' || id === 'rx-sx') return { part: 'วิทยุ XL1276-P01 (SX1276)', pin: `${{ '3.3V': 'VCC', RESET: 'RES' }[pin] ?? pin} — ตามตัวหนังสือด้านหลังโมดูล` };
+  if (id === 'sx' || id === 'rx-sx') return { part: 'วิทยุ XL1276-P01 (SX1276)', pin: `${{ '3.3V': 'VCC', RESET: 'REST' }[pin] ?? pin} — ตามตัวหนังสือด้านหลังโมดูล` };
   if (PART_NAME[id]) return { part: PART_NAME[id], pin: PIN_TH[pin] ?? pin };
   const v = values[id]; const polar = { '+': 'ขา + (ขายาว)', '-': 'ขา − (ฝั่งแถบ)', A: 'ขา A (ฝั่งไม่มีแถบ)', K: 'ขา K (ฝั่งแถบ)' };
   return { part: `${id}${v ? ' ' + v : ''}`, pin: polar[pin] ?? `ขา ${pin} (ไม่มีขั้ว)` };
