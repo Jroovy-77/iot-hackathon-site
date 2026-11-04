@@ -1,5 +1,5 @@
 // โมเดล 3 มิติของแท็บ Breadboard (กล่องบ้าน / ตัวรับ) — ข้อมูลสายทั้งหมดมาจาก breadboard-nets.js
-// แผ่นเต็ม 63 คอลัมน์ × แถว a–j + ราง 4 เส้น (ขาดกลางแผ่น) · แผ่นครึ่ง 30 คอลัมน์ · ขาทุกขาลงรูจริง ระยะ 2.54 มม.
+// กล่องบ้าน = แผ่น 400 รู 30 คอลัมน์ · ตัวรับ = แผ่นใหญ่ 63 คอลัมน์ (รางขาดกลาง) · แถว a–j + ราง 4 เส้น · ขาทุกขาลงรูจริง ระยะ 2.54 มม.
 import { superMini, waterProbe, P } from './parts3d.js';
 import { board } from './layout.js';
 import { BB_HOUSE, BB_RX, bands5 } from './breadboard-nets.js';
@@ -8,25 +8,20 @@ import { stripOf } from './breadboard-check.js';
 const ROWS = 'abcdefghij';
 const rowZ = (r) => { const k = ROWS.indexOf(r); return (k < 5 ? k - 5.5 : k - 3.5) * P; };   // a = −5.5P … e = −1.5P · f = +1.5P … j = +5.5P
 const RAIL_Z = { vsys: -9 * P, gndT: -8 * P, gndB: 8 * P, '3v3': 9 * P };
-const HB = { x: 85, z: -66 };                       // กลางแผ่นครึ่ง (อยู่เหนือแผ่นเต็ม ฝั่งขวา)
-const HB_RAIL_Z = { gnd: HB.z + 8 * P, vsys: HB.z + 9 * P };
-const railHole = (c, last) => c >= 3 && c <= last && (c - 3) % 6 !== 5;   // รางเป็นกลุ่มละ 5 รู เว้น 1 (3–7, 9–13, …)
+// รางเป็นกลุ่มละ 5 รู เว้น 1 · แผ่นใหญ่ 3–7, 9–13, … · แผ่น 400 รู 2–6, 8–12, … 26–30 (เลขรางบนแผ่นจริงอาจเหลื่อมกันเล็กน้อย)
+const railHole = (c, last) => (last === 30 ? c >= 2 && c <= 30 && (c - 2) % 6 !== 5 : c >= 3 && c <= last && (c - 3) % 6 !== 5);
 
 // ตำแหน่งรู (หน่วย มม. บนผิวแผ่น y = 0)
-export function holePos(h) {
-  let m = /^m(\d+)([a-j])$/.exec(h); if (m) return { x: (+m[1] - 32) * P, z: rowZ(m[2]) };
-  m = /^h(\d+)([a-j])$/.exec(h); if (m) return { x: HB.x + (+m[1] - 15.5) * P, z: HB.z + rowZ(m[2]) };
-  m = /^bb\.(vsys|gndT|gndB|3v3)2?@(\d+)$/.exec(h); if (m) return { x: (+m[2] - 32) * P, z: RAIL_Z[m[1]] };
-  m = /^hb\.(gnd|vsys)@(\d+)$/.exec(h); if (m) return { x: HB.x + (+m[2] - 15.5) * P, z: HB_RAIL_Z[m[1]] };
+export function holePos(h, cc = 32) {   // cc = คอลัมน์กลางแผ่น (แผ่นใหญ่ 32 · แผ่น 400 รู 15.5)
+  let m = /^m(\d+)([a-j])$/.exec(h); if (m) return { x: (+m[1] - cc) * P, z: rowZ(m[2]) };
+  m = /^bb\.(vsys|gndT|gndB|3v3)2?@(\d+)$/.exec(h); if (m) return { x: (+m[2] - cc) * P, z: RAIL_Z[m[1]] };
   return null;
 }
 const RAIL_NAME = { 'bb.vsys': 'ราง VSYS บน', 'bb.vsys2': 'ราง VSYS บน (ครึ่งขวา)', 'bb.gndT': 'ราง GND บน', 'bb.gndT2': 'ราง GND บน (ครึ่งขวา)',
-  'bb.gndB': 'ราง GND ล่าง', 'bb.gndB2': 'ราง GND ล่าง (ครึ่งขวา)', 'bb.3v3': 'ราง 3V3 ล่าง', 'bb.3v32': 'ราง 3V3 ล่าง (ครึ่งขวา)',
-  'hb.vsys': 'แผ่นครึ่ง ราง VSYS', 'hb.gnd': 'แผ่นครึ่ง ราง GND' };
+  'bb.gndB': 'ราง GND ล่าง', 'bb.gndB2': 'ราง GND ล่าง (ครึ่งขวา)', 'bb.3v3': 'ราง 3V3 ล่าง', 'bb.3v32': 'ราง 3V3 ล่าง (ครึ่งขวา)' };
 export function holeText(h) {
   let m = /^m(\d+)([a-j])$/.exec(h); if (m) return `รู ${m[1]}${m[2]}`;
-  m = /^h(\d+)([a-j])$/.exec(h); if (m) return `แผ่นครึ่ง รู ${m[1]}${m[2]}`;
-  m = /^(bb\.\w+|hb\.\w+)@(\d+)$/.exec(h); if (m) return `${RAIL_NAME[m[1]]} ตรงคอลัมน์ ${m[2]}`;
+  m = /^(bb\.\w+)@(\d+)$/.exec(h); if (m) return `${RAIL_NAME[m[1]]} ตรงคอลัมน์ ${m[2]}`;
   return h;
 }
 
@@ -246,23 +241,17 @@ function lead2(T, K, kind, value, pa, pb) {
 function build(T, K, data, offBoard) {
   const B = board(T, K);
   const problems = B.problems;
-  const main = breadboardMesh(T, K, 63, 64 * P + 3, 21.4 * P, 0, 0, 61, data.key === 'bbHouse' ? 'Breadboard แผ่นใหญ่ (กล่องบ้าน)' : 'Breadboard ตัวรับ (ของจริงใช้แผ่นเล็ก)');
+  const cols = data.cols ?? 63; const cc = (cols + 1) / 2; const lastRail = cols === 30 ? 30 : 61; const hole = (h) => holePos(h, cc);
+  const main = breadboardMesh(T, K, cols, (cols + 1) * P + 3, 21.4 * P, 0, 0, lastRail, data.key === 'bbHouse' ? 'Breadboard 400 รู (กล่องบ้าน)' : 'Breadboard แผ่นใหญ่ (ตัวรับ)');
   B.root.add(main.g); B.partLabels.add(main.lab);
-  const usesHalf = data.nets.some((n) => n.at.some((h) => h && /^(h\d|hb\.)/.test(h)));
-  if (usesHalf) { const hb = breadboardMesh(T, K, 30, 31 * P + 3, 21.4 * P, HB.x, HB.z, 30, 'Breadboard ครึ่งแผ่น (เครื่องขยายเสียง + ตัวกรอง)'); B.root.add(hb.g); B.partLabels.add(hb.lab); }
 
   // ราง: จุดต่อทุกจุดเป็นรู (ใช้กับ "ดูทั้งจุดต่อ" และสีชิป)
-  const railDefs = [['bb.vsys', 'vsys', 'power', 'VSYS', 3, 31], ['bb.vsys2', 'vsys', 'power', null, 33, 61], ['bb.gndT', 'gndT', 'ground', 'GND', 3, 31], ['bb.gndT2', 'gndT', 'ground', null, 33, 61],
+  const railDefs = cols === 30 ? [['bb.vsys', 'vsys', 'power', 'VSYS', 2, 30], ['bb.gndT', 'gndT', 'ground', 'GND', 2, 30], ['bb.gndB', 'gndB', 'ground', 'GND', 2, 30], ['bb.3v3', '3v3', 'power', '3V3', 2, 30]] : [['bb.vsys', 'vsys', 'power', 'VSYS', 3, 31], ['bb.vsys2', 'vsys', 'power', null, 33, 61], ['bb.gndT', 'gndT', 'ground', 'GND', 3, 31], ['bb.gndT2', 'gndT', 'ground', null, 33, 61],
     ['bb.gndB', 'gndB', 'ground', 'GND', 3, 31], ['bb.gndB2', 'gndB', 'ground', null, 33, 61], ['bb.3v3', '3v3', 'power', '3V3', 3, 31], ['bb.3v32', '3v3', 'power', null, 33, 61]];
   for (const [name, k, type, text, c1, c2] of railDefs) {
-    const holes = []; for (let c = c1; c <= c2; c++) if (railHole(c, 61)) holes.push({ i: c, j: 0, x: (c - 32) * P, z: RAIL_Z[k] });
-    B.rails[name] = { path: [[(c1 - 32) * P, RAIL_Z[k]], [(c2 - 32) * P, RAIL_Z[k]]], y: 0.3, type, text: RAIL_NAME[name], holes };
-    if (text) B.railLabel(text, type, (c1 - 32.6) * P, RAIL_Z[k], true);
-  }
-  if (usesHalf) for (const [name, k, type, text] of [['hb.vsys', 'vsys', 'power', 'VSYS'], ['hb.gnd', 'gnd', 'ground', 'GND']]) {
-    const holes = []; for (let c = 2; c <= 30; c++) if (railHole(c, 30)) holes.push({ i: c, j: 0, x: HB.x + (c - 15.5) * P, z: HB_RAIL_Z[k] });
-    B.rails[name] = { path: [[HB.x - 14 * P, HB_RAIL_Z[k]], [HB.x + 14 * P, HB_RAIL_Z[k]]], y: 0.3, type, text: RAIL_NAME[name], holes };
-    B.railLabel(text, type, HB.x - 15.6 * P, HB_RAIL_Z[k], true);
+    const holes = []; for (let c = c1; c <= c2; c++) if (railHole(c, lastRail)) holes.push({ i: c, j: 0, x: (c - cc) * P, z: RAIL_Z[k] });
+    B.rails[name] = { path: [[(c1 - cc) * P, RAIL_Z[k]], [(c2 - cc) * P, RAIL_Z[k]]], y: 0.3, type, text: RAIL_NAME[name], holes };
+    if (text) B.railLabel(text, type, (c1 - cc - 0.6) * P, RAIL_Z[k], true);
   }
 
   const partOf = {};   // id ชิ้น → { group, labels[], pinLabels[] } ไว้ซ่อน/โชว์ตามขั้น
@@ -280,27 +269,27 @@ function build(T, K, data, offBoard) {
   for (const px of [-7.62, 7.62]) K.box(wrap, 2.5, lift, 20.3, 0x1b1b1b, px, lift / 2, 0, { r: 0.7 });   // ฐานพลาสติกของขาหัวเข็ม
   const mcuPart = { g: wrap, pins: Object.fromEntries(Object.entries(sm.pins).map(([n, p]) => [n, [p[0], p[1] + lift, p[2]]])), pinLabels: sm.pinLabels.map(([t, p, a]) => [t, [p[0], p[1] + lift, p[2]], a]) };
   // ขา 5V (ขาแรกฝั่ง USB ของแถว 5V) ลงรูที่ข้อมูลกำหนด → หาตำแหน่งวาง
-  const c5v = +Object.keys(data.mcu.top).find((c) => data.mcu.top[c] === '5V'); const h5 = holePos(`m${c5v}${data.mcu.topRow}`);
+  const c5v = +Object.keys(data.mcu.top).find((c) => data.mcu.top[c] === '5V'); const h5 = hole(`m${c5v}${data.mcu.topRow}`);
   const rot = Math.PI / 2; const loc5 = sm.pins['5V'];   // หัว USB ชี้ซ้าย → แถว 5V…GPIO0 อยู่แถวบน (ตามบอร์ดจริง มองด้านชิป)
   const mx = h5.x - (loc5[0] * Math.cos(rot) + loc5[2] * Math.sin(rot)); const mz = h5.z - (-loc5[0] * Math.sin(rot) + loc5[2] * Math.cos(rot));
   addPart(data.mcu.id, mcuPart, mx, mz, rot, 'ESP32-C3 Super Mini', { labelDz: -16 });
   const used = new Map();   // รู → ใครใช้
   const take = (h, who) => {
     if (used.has(h)) problems.push(`รูซ้ำ ${h}: ${used.get(h)} กับ ${who}`); used.set(h, who);
-    const r = /^(bb|hb)\.\w+?(2?)@(\d+)$/.exec(h);
-    if (r) { const c = +r[3]; const right = r[2] === '2';
-      if (!railHole(c, r[1] === 'hb' ? 30 : 61)) problems.push(`ไม่มีรูรางที่ ${h} (${who})`);
-      if (r[1] === 'bb' && (right ? c < 33 : c > 31)) problems.push(`รูราง ${h} อยู่คนละครึ่งกับชื่อราง (${who})`); }
+    const r = /^bb\.\w+?(2?)@(\d+)$/.exec(h);
+    if (r) { const c = +r[2]; const right = r[1] === '2';
+      if (!railHole(c, lastRail)) problems.push(`ไม่มีรูรางที่ ${h} (${who})`);
+      if (cols !== 30 && (right ? c < 33 : c > 31)) problems.push(`รูราง ${h} อยู่คนละครึ่งกับชื่อราง (${who})`); }
   };
   for (const [rowName, map] of [[data.mcu.topRow, data.mcu.top], [data.mcu.bottomRow, data.mcu.bottom]]) for (const [c, n] of Object.entries(map)) {
-    const want = holePos(`m${c}${rowName}`); const got = B.pins.get(`${data.mcu.id}.${n}`);
+    const want = hole(`m${c}${rowName}`); const got = B.pins.get(`${data.mcu.id}.${n}`);
     if (Math.abs(got.x - want.x) > 0.05 || Math.abs(got.z - want.z) > 0.05) problems.push(`ขาบอร์ด ${n} ไม่ลงรู m${c}${rowName}`);
     take(`m${c}${rowName}`, `${data.mcu.id}.${n}`);
   }
 
   // ชิ้น 2 ขาบนแผ่น
   for (const p of data.parts) {
-    const [ta, tb] = Object.keys(p.pins); const pa = holePos(p.pins[ta]); const pb = holePos(p.pins[tb]);
+    const [ta, tb] = Object.keys(p.pins); const pa = hole(p.pins[ta]); const pb = hole(p.pins[tb]);
     if (!pa || !pb) { problems.push(`ชื่อรูผิด ${p.id}`); continue; }
     const part = lead2(T, K, p.kind, p.value, pa, pb);
     part.pins = { [ta]: [pa.x, 0.3, pa.z], [tb]: [pb.x, 0.3, pb.z] }; part.pinLabels = [];
@@ -313,7 +302,7 @@ function build(T, K, data, offBoard) {
   // ปลายสาย: รูตามข้อมูล (หรือจุดบัดกรีของชิ้นนอกแผ่น)
   const ends = data.nets.map((n) => n.at.map((h, k) => {
     if (!h) { const p = B.pins.get(k ? n.to : n.from); if (!p) problems.push(`ไม่พบจุดบัดกรี ${k ? n.to : n.from}`); return p ? p.clone() : new T.Vector3(); }
-    take(h, `สาย ${n.id}`); const q = holePos(h); if (!q) { problems.push(`ชื่อรูผิด ${h}`); return new T.Vector3(); }
+    take(h, `สาย ${n.id}`); const q = hole(h); if (!q) { problems.push(`ชื่อรูผิด ${h}`); return new T.Vector3(); }
     return new T.Vector3(q.x, 0.35, q.z);
   }));
   // ขาที่เสียบรูเดียวกันแถวเดียวกัน = ต่อกัน (ให้ "ดูทั้งจุดต่อ" นับถูก)
@@ -326,32 +315,32 @@ function build(T, K, data, offBoard) {
   const house = data.key === 'bbHouse';
   return Object.assign(out, {
     key: data.key, title: house ? 'Breadboard กล่องบ้าน' : 'Breadboard ตัวรับ', holes: [],
-    extent: house ? { minX: -168, maxX: 165, minZ: -142, maxZ: 86, maxY: 45 } : { minX: -92, maxX: 92, minZ: -34, maxZ: 84, maxY: 12 },
+    extent: house ? { minX: -135, maxX: 110, minZ: -125, maxZ: 100, maxY: 45 } : { minX: -92, maxX: 92, minZ: -34, maxZ: 84, maxY: 12 },
     endpoint: (i, side) => ends[i][side], links, partOf, data,
   });
 }
 
 // ชิ้นนอกแผ่นของแต่ละผัง: [id, part, x, z, หมุน, ชื่อ, ตัวเลือก]
-function radioSet(T, K, sxId, antId) {
-  const sx = sx1276(T, K); const ant = springAnt(T, K); const sxX = -8; const sxZ = 68;   // ต่ำกว่าแนวสายวัดน้ำ (z ≈ 52) สายจะได้ไม่พาดทับโมดูล
+function radioSet(T, K, sxId, antId, sxX) {
+  const sx = sx1276(T, K); const ant = springAnt(T, K); const sxZ = 68;   // ต่ำกว่าแนวสายวัดน้ำ (z ≈ 52) สายจะได้ไม่พาดทับโมดูล
   const antPad = sx.pins.ANT;
   return [[sxId, sx, sxX, sxZ, 0, 'วิทยุ XL1276-P01 (SX1276) มองด้านตัวหนังสือ', { labelDz: 13 }],
     [antId, ant, sxX + antPad[0] + 1.5, sxZ + antPad[2], 0, 'เสาสปริง (แถมมา)', { labelDz: -6 }]];   // ANT อยู่มุมขวาบน เสายื่นออกขวา
 }
 export function buildBBHouse(T, K) {
   return build(T, K, BB_HOUSE, () => [
-    ...radioSet(T, K, 'sx', 'ant'),
+    ...radioSet(T, K, 'sx', 'ant', -26),
     ['btn-sos', arcadeButton(T, K, 'sos'), -80, -75, 0, 'ปุ่มแดง 60 มม. (มองด้านหลัง)'],
     ['btn-ack', arcadeButton(T, K, 'ack'), 8, -96, 0, 'ปุ่มเขียว 46 มม. (มองด้านหลัง)'],
     ['ring', ring12(T, K), -28, -62, 0, 'แหวนไฟ CJMCU-2812B-12 (มองด้านหลัง)', { labelDz: -24 }],
     ['amp', pamReal(T, K), 82, -55, 0, 'PAM8403 (แผ่นแดง 11 ขา)', { labelDz: -22 }],   // ขาอยู่ขวาของรูปลายทาง สายทุกเส้นออกซ้าย ไม่ทับป้ายขา
     ['speaker', rectSpeaker(T, K), 36, -52, 0, 'ลำโพง (สายแดง-ดำ มีปลั๊ก)'],
-    ['battery', battery3(T, K), -140, 2, 0, 'รางถ่าน AA ×3 (ไม่มีสวิตช์)'],
-    ['probe', waterProbe(T, K), -118, 52, 0, 'สายวัดน้ำ (บ้านติดเตียง)'],
+    ['battery', battery3(T, K), -108, 2, 0, 'รางถ่าน AA ×3 (ไม่มีสวิตช์)'],
+    ['probe', waterProbe(T, K), -80, 50, 0, 'สายวัดน้ำ (บ้านติดเตียง)'],
   ]);
 }
 export function buildBBRx(T, K) {
-  return build(T, K, BB_RX, () => radioSet(T, K, 'rx-sx', 'rx-ant'));
+  return build(T, K, BB_RX, () => radioSet(T, K, 'rx-sx', 'rx-ant', -8));
 }
 
 /* ------------------------------------------------------------- ชื่อขาแบบอ่านง่าย */
@@ -366,7 +355,7 @@ export function bbShort(name) {
   return `${id} ขา ${PIN_TH[pin] ?? pin}`;
 }
 export function bbDetail(name, values) {
-  if (RAIL_NAME[name]) return { part: RAIL_NAME[name], pin: name.startsWith('hb.') ? 'รางของแผ่นครึ่ง' : 'ทุกรูในแนวเส้นสีเดียวกันต่อกัน (เฉพาะครึ่งแผ่นเดียวกัน)' };
+  if (RAIL_NAME[name]) return { part: RAIL_NAME[name], pin: 'ทุกรูในแนวเส้นสีเดียวกันต่อกัน' };
   const i = name.indexOf('.'); const id = name.slice(0, i); const pin = name.slice(i + 1);
   if (id === 'mcu' || id === 'rx-mcu') return { part: 'ESP32-C3 Super Mini', pin: `ขา ${pin} (เทียบชื่อที่พิมพ์บนบอร์ดจริง)` };
   if (id === 'sx' || id === 'rx-sx') return { part: 'วิทยุ XL1276-P01 (SX1276)', pin: `${{ '3.3V': 'VCC', RESET: 'REST' }[pin] ?? pin} — ตามตัวหนังสือด้านหลังโมดูล` };

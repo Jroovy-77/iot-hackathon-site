@@ -21,7 +21,7 @@
     <div class="tabs" role="tablist" aria-label="เลือกอุปกรณ์">
       <button class="tab" type="button" role="tab" data-tab="house" aria-selected="true">กล่องบ้าน <span class="mono">96 เส้น</span></button>
       <button class="tab" type="button" role="tab" data-tab="rx" aria-selected="false" tabindex="-1">ตัวรับ <span class="mono">21 เส้น</span></button>
-      <button class="tab bb" type="button" role="tab" data-tab="bbHouse" aria-selected="false" tabindex="-1">Breadboard กล่องบ้าน <span class="mono">36 เส้น</span></button>
+      <button class="tab bb" type="button" role="tab" data-tab="bbHouse" aria-selected="false" tabindex="-1">Breadboard กล่องบ้าน <span class="mono">32 เส้น</span></button>
       <button class="tab bb" type="button" role="tab" data-tab="bbRx" aria-selected="false" tabindex="-1">Breadboard ตัวรับ <span class="mono">11 เส้น</span></button>
     </div>
     <p id="src" class="src">กำลังเทียบกับ <span class="mono">docs/wiring.md</span></p>
@@ -99,7 +99,7 @@
         <ul id="note-bb" hidden>
           <li><b>ผังรอบ Breadboard</b> ตาม <span class="mono">docs/wiring-breadboard.md</span> · ขา GPIO ตรงกับ <span class="mono">firmware/common/pins.h</span> (หน้านี้เช็กให้ทุกครั้งที่เปิด) · <span class="dv-tag">ค่า R/C และขาทั้งหมดเป็นค่าออกแบบ</span></li>
           <li><b>อ่านชื่อรู</b> "รู 24c" = คอลัมน์ 24 แถว c · รู 5 รูในคอลัมน์เดียวกันและครึ่งเดียวกัน (a–e หรือ f–j) ต่อถึงกัน · ตำแหน่งรูในผังเป็นตัวอย่าง จะย้ายคอลัมน์ได้ถ้าย้ายทุกเส้นในแถวนั้นไปด้วย</li>
-          <li><b>ราง</b> บน = VSYS (แดง) + GND (น้ำเงิน) · ล่าง = GND + 3V3 · <b>รางขาดกลางแผ่น</b> ต้องมีสายเชื่อมสองครึ่ง · ถ้าเลขคอลัมน์บนแผ่นจริงกลับด้าน ให้กลับด้านตาม</li>
+          <li><b>ราง</b> บน = VSYS (แดง) + GND (น้ำเงิน) · ล่าง = GND + 3V3 · <b>กล่องบ้านใช้แผ่น 400 รู</b> ถ้ารางขาดกลาง (แตะหัว-ท้ายรางด้วยมัลติมิเตอร์แล้วไม่ดัง) ต้องเพิ่มสายเชื่อมสองครึ่ง · ตัวรับใช้แผ่นใหญ่ รางขาดกลาง · ถ้าเลขคอลัมน์บนแผ่นจริงกลับด้าน ให้กลับด้านตาม</li>
           <li><b>ต่อทีละขั้น</b> กด "ต่อทีละขั้น" แล้ว → ทีละสาย/ทีละชิ้น วงกลมสีดำชี้รูต้นทาง-ปลายทาง · ขั้น "หยุดทดสอบ" ต้องผ่านก่อนไปช่วงต่อไป (เกณฑ์ใน <span class="mono">docs/test-plan.md</span>)</li>
           <li><b>วิทยุ XL1276-P01</b> (ชิป SX1276) วาดตามตัวหนังสือด้านหลังโมดูลจริง · ขาห่าง ~2 มม. ต้องบัดกรีสาย · <b>VCC = 3.3V ห้ามต่อ 5V</b> · REST = RESET · ต่อเสาสปริงก่อนเสียบไฟทุกครั้ง</li>
           <li>ไฟบ้าน = เสียบสาย USB-C เข้าบอร์ดตรง ๆ (ไม่ใช้ D1) · ไม่มีสวิตช์ตัดไฟรอบนี้ (ถ่านอยู่ได้ราว 2–3 วัน <span class="dv-tag">ประมาณการ</span>)</li>

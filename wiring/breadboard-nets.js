@@ -3,10 +3,10 @@
 // เลข GPIO มาจาก PINS ด้านล่าง ซึ่งต้องตรงกับ firmware/common/pins.h (หน้าเว็บเช็กให้เองทุกครั้งที่เปิด)
 // ถ้าแก้ขา: แก้ pins.h + wiring-breadboard.md + PINS ในไฟล์นี้ให้ตรงกัน แล้วบันทึกลง docs/handoff.md
 //
-// รู: 'm24c' = แผ่นใหญ่ คอลัมน์ 24 แถว c · 'bb.vsys@30' = รางของแผ่นใหญ่ ตรงคอลัมน์ 30
-// (3 พ.ย.: ผู้ใช้มีแผ่นใหญ่ 1 + เล็ก 1 → กล่องบ้านใช้แผ่นใหญ่แผ่นเดียว ส่วนเสียงอยู่ฝั่งขวาคอลัมน์ 40–48 · ไม่ใช้แผ่นครึ่งแล้ว)
+// รู: 'm24c' = คอลัมน์ 24 แถว c · 'bb.vsys@30' = รางตรงคอลัมน์ 30
+// (4 พ.ย.: กล่องบ้าน = แผ่น 400 รู 30 คอลัมน์ · ตัวรับ = แผ่นใหญ่ 63 คอลัมน์)
 // แถว a–e = ครึ่งบน · f–j = ครึ่งล่าง · รูในคอลัมน์เดียวกันและครึ่งเดียวกัน (5 รู) ต่อถึงกัน
-// รางแผ่นเต็ม: บน = VSYS (นอก) + GND (ใน) · ล่าง = GND (ใน) + 3V3 (นอก) · รางขาดกลางแผ่น (ซ้าย ≤ 31 · ขวา ≥ 33)
+// ราง: บน = VSYS (นอก) + GND (ใน) · ล่าง = GND (ใน) + 3V3 (นอก) · แผ่นใหญ่รางขาดกลาง (ซ้าย ≤ 31 · ขวา ≥ 33) · แผ่น 400 รู รางต่อยาว
 
 export const PINS = {   // = firmware/common/pins.h
   RADIO_SCK: 6, RADIO_MISO: 5, RADIO_MOSI: 7, RADIO_NSS: 8, RADIO_DIO0: 3, RADIO_RESET: 10,
@@ -14,18 +14,21 @@ export const PINS = {   // = firmware/common/pins.h
 };
 const G = (n) => `GPIO${n}`;
 
-// ESP32-C3 Super Mini คร่อมร่องกลาง ด้านชิปขึ้น หัว USB-C ชี้ไปทางซ้าย (คอลัมน์ 23) · ขาแถวบนลงแถว d · ขาแถวล่างลงแถว h
+// ESP32-C3 Super Mini คร่อมร่องกลาง ด้านชิปขึ้น หัว USB-C ชี้ไปทางซ้าย · ขาแถวบนลงแถว d · ขาแถวล่างลงแถว h
 // ลำดับตามตัวหนังสือใต้บอร์ดจริง (รูปผู้ใช้ 1 พ.ย.): มองด้านล่าง หัว USB ขึ้น ซ้าย = 5V G 3.3 4 3 2 1 0 · ขวา = 5 6 7 8 9 10 20 21
-const MCU_TOP = { 24: '5V', 25: 'GND', 26: '3V3', 27: 'GPIO4', 28: 'GPIO3', 29: 'GPIO2', 30: 'GPIO1', 31: 'GPIO0' };
-const MCU_BOT = { 24: 'GPIO5', 25: 'GPIO6', 26: 'GPIO7', 27: 'GPIO8', 28: 'GPIO9', 29: 'GPIO10', 30: 'GPIO20', 31: 'GPIO21' };
-const mcuPlace = (id) => ({ id, top: MCU_TOP, bottom: MCU_BOT, topRow: 'd', bottomRow: 'h' });
-const col = (pin) => +Object.keys(MCU_TOP).find((c) => MCU_TOP[c] === pin) || +Object.keys(MCU_BOT).find((c) => MCU_BOT[c] === pin);
+const MCU_TOP = ['5V', 'GND', '3V3', 'GPIO4', 'GPIO3', 'GPIO2', 'GPIO1', 'GPIO0'];
+const MCU_BOT = ['GPIO5', 'GPIO6', 'GPIO7', 'GPIO8', 'GPIO9', 'GPIO10', 'GPIO20', 'GPIO21'];
+const mcuAt = (first) => (names) => Object.fromEntries(names.map((n, i) => [first + i, n]));
+const HOUSE_MCU = mcuAt(1); const RX_MCU = mcuAt(24);   // กล่องบ้าน = คอลัมน์ 1–8 · ตัวรับ = คอลัมน์ 24–31
+const mcuPlace = (id, at) => ({ id, top: at(MCU_TOP), bottom: at(MCU_BOT), topRow: 'd', bottomRow: 'h' });
+const colOf = (first) => (pin) => first + Math.max(MCU_TOP.indexOf(pin), MCU_BOT.indexOf(pin));
+const col = colOf(1); const colR = colOf(24);
 
 // ---- สายวิทยุ (เหมือนกันทั้งกล่องบ้านและตัวรับ) — ปลายฝั่งบอร์ดลงรูว่างในคอลัมน์ของขานั้น
-function radioNets(mcu, sx, ant, sec) {
+function radioNets(mcu, sx, ant, sec, col, power) {
   return [
-    { id: 'r33', from: `${sx}.3.3V`, to: 'bb.3v3', at: [null, 'bb.3v3@30'], type: 'power', sec: sec.power, note: 'บนโมดูลพิมพ์ว่า VCC · ต่อ 3.3V เท่านั้น ห้ามต่อ 5V เด็ดขาด' },
-    { id: 'rgnd', from: `${sx}.GND`, to: 'bb.gndB', at: [null, 'bb.gndB@30'], type: 'ground', sec: sec.power, note: 'GND บนโมดูลมี 3 จุด ต่อถึงกันอยู่แล้ว ใช้จุดใกล้ MISO จุดเดียวพอ' },
+    { id: 'r33', from: `${sx}.3.3V`, to: 'bb.3v3', at: [null, power.v], type: 'power', sec: sec.power, note: 'บนโมดูลพิมพ์ว่า VCC · ต่อ 3.3V เท่านั้น ห้ามต่อ 5V เด็ดขาด' },
+    { id: 'rgnd', from: `${sx}.GND`, to: 'bb.gndB', at: [null, power.g], type: 'ground', sec: sec.power, note: 'GND บนโมดูลมี 3 จุด ต่อถึงกันอยู่แล้ว ใช้จุดใกล้ MISO จุดเดียวพอ' },
     { id: 'sck', from: `${sx}.SCK`, to: `${mcu}.${G(PINS.RADIO_SCK)}`, at: [null, `m${col(G(PINS.RADIO_SCK))}i`], type: 'data', sec: sec.spi },
     { id: 'miso', from: `${sx}.MISO`, to: `${mcu}.${G(PINS.RADIO_MISO)}`, at: [null, `m${col(G(PINS.RADIO_MISO))}i`], type: 'data', sec: sec.spi },
     { id: 'mosi', from: `${sx}.MOSI`, to: `${mcu}.${G(PINS.RADIO_MOSI)}`, at: [null, `m${col(G(PINS.RADIO_MOSI))}i`], type: 'data', sec: sec.spi },
@@ -41,65 +44,62 @@ const H = { solder: 0, multi: 1, rxFirst: 2, power: 3, spi: 3, red: 4, green: 5,
 
 export const BB_HOUSE = {
   key: 'bbHouse',
-  sections: ['บัดกรีก่อน', 'เช็กมัลติมิเตอร์', 'ตัวรับก่อน', 'บอร์ด + วิทยุ', 'ปุ่มแดง', 'ปุ่มเขียว', 'แหวนไฟ 12 ดวง', 'เสียง (ฝั่งขวาของแผ่น)', 'วัดถ่าน + ไฟสำรอง', 'สายวัดน้ำ'],
-  mcu: mcuPlace('mcu'),
+  cols: 30,   // แผ่น 400 รู
+  sections: ['บัดกรีก่อน', 'เช็กมัลติมิเตอร์', 'ตัวรับก่อน', 'บอร์ด + วิทยุ', 'ปุ่มแดง', 'ปุ่มเขียว', 'แหวนไฟ 12 ดวง', 'เสียง', 'วัดถ่าน + ไฟสำรอง', 'สายวัดน้ำ'],
+  mcu: mcuPlace('mcu', HOUSE_MCU),
   rails: { VSYS: 'bb.vsys', GND: 'bb.gndT', '3V3': 'bb.3v3' },   // รางที่เป็นไฟ/กราวด์หลัก (ไว้เทียบกับเอกสาร)
   // ชิ้นที่เสียบลงรู (ขา → รู) · ค่า R/C ตาม wiring-breadboard.md ข้อ 1 และ 7 (ค่าออกแบบ)
   parts: [
-    { id: 'C6', kind: 'E', value: '470 µF', pins: { '+': 'bb.vsys@28', '-': 'bb.gndT@28' }, sec: H.power, note: 'ตัวดำใหญ่สุดในถุง · คร่อมราง VSYS–GND ใกล้บอร์ด · ขาสั้นฝั่งแถบเทา (−) ลง GND' },
-    { id: 'C7', kind: 'E', value: '10 µF', pins: { '+': 'bb.3v3@27', '-': 'bb.gndB@27' }, sec: H.power, note: 'ตัวดำเขียน 10µF 50V · ชิดจุดที่สายไฟวิทยุเสียบ · ขาสั้นฝั่งแถบ (−) ลง GND' },
-    { id: 'C8', kind: 'C', value: '100 nF', pins: { 1: 'bb.3v3@29', 2: 'bb.gndB@29' }, sec: H.power, note: 'ตัวกลมสีส้มอิฐ เขียน 104 · ไม่มีขั้ว · ชิดจุดที่สายไฟวิทยุเสียบ' },
-    { id: 'R5', kind: 'R', value: '10 kΩ', pins: { 1: `m${col(G(PINS.RADIO_NSS))}j`, 2: 'bb.3v3@28' }, sec: H.spi, note: 'ดึงขา NSS ขึ้น 3V3' },
-    { id: 'C1', kind: 'C', value: '100 nF', pins: { 1: `m${col(G(PINS.BTN_RED))}a`, 2: 'bb.gndT@30' }, sec: H.red, note: 'ตัวกลมสีส้มอิฐ เขียน 104 · ไม่มีขั้ว · ขาปุ่มแดงลง GND (กันสัญญาณรบกวน)' },
+    { id: 'C6', kind: 'E', value: '470 µF', pins: { '+': 'bb.vsys@4', '-': 'bb.gndT@4' }, sec: H.power, note: 'ตัวดำใหญ่สุดในถุง · คร่อมราง VSYS–GND ใกล้บอร์ด · ขาสั้นฝั่งแถบเทา (−) ลง GND' },
+    { id: 'C7', kind: 'E', value: '10 µF', pins: { '+': 'bb.3v3@3', '-': 'bb.gndB@3' }, sec: H.power, note: 'ตัวดำเขียน 10µF 50V · ชิดจุดที่สายไฟวิทยุเสียบ · ขาสั้นฝั่งแถบ (−) ลง GND' },
+    { id: 'C8', kind: 'C', value: '100 nF', pins: { 1: 'bb.3v3@4', 2: 'bb.gndB@4' }, sec: H.power, note: 'ตัวกลมสีส้มอิฐ เขียน 104 · ไม่มีขั้ว · ชิดจุดที่สายไฟวิทยุเสียบ' },
+    { id: 'R5', kind: 'R', value: '10 kΩ', pins: { 1: `m${col(G(PINS.RADIO_NSS))}j`, 2: 'bb.3v3@5' }, sec: H.spi, note: 'ดึงขา NSS ขึ้น 3V3' },
+    { id: 'C1', kind: 'C', value: '100 nF', pins: { 1: `m${col(G(PINS.BTN_RED))}a`, 2: 'bb.gndT@8' }, sec: H.red, note: 'ตัวกลมสีส้มอิฐ เขียน 104 · ไม่มีขั้ว · ขาปุ่มแดงลง GND (กันสัญญาณรบกวน)' },
     { id: 'R2', kind: 'R', value: '100 kΩ', pins: { 1: `m${col(G(PINS.BTN_GREEN))}a`, 2: `m${col('3V3')}a` }, sec: H.green, note: 'ดึงขาปุ่มเขียวขึ้น 3V3 (คอลัมน์ 3V3 ของบอร์ด)' },
-    { id: 'R8', kind: 'R', value: '330 Ω', pins: { 1: `m${col(G(PINS.LED_RING))}i`, 2: 'm34i' }, sec: H.ring, note: 'อนุกรมที่ DIN ของแหวนไฟ' },
-    { id: 'R9', kind: 'R', value: '2.2 kΩ', pins: { 1: 'm40h', 2: 'm44h' }, sec: H.audio, note: 'ตัวกรองเสียง ขั้นที่ 1' },
-    { id: 'C4', kind: 'C', value: '10 nF', pins: { 1: 'm44j', 2: 'bb.gndB2@45' }, sec: H.audio, note: 'ตัวเล็กสีเหลืองส้ม เขียน 103 (ถุงเขียน 10nf) · ไม่มีขั้ว · จุดระหว่าง R9 กับ C5 ลง GND' },
-    { id: 'C5', kind: 'C', value: '100 nF', pins: { 1: 'm44i', 2: 'm48i' }, sec: H.audio, note: 'ตัวกลมสีส้มอิฐ เขียน 104 · ไม่มีขั้ว · กั้นไฟตรงก่อนเข้า PAM8403 (1 พ.ย.: เปลี่ยนจาก 1 µF ตัวดำมีขั้ว — ไม่รู้แน่ว่าไฟฝั่ง LIN สูงหรือต่ำกว่า จึงใช้ตัวไม่มีขั้วแทน)' },
-    { id: 'R3', kind: 'R', value: '1 MΩ', pins: { 1: 'm10b', 2: 'm14b' }, sec: H.batt, note: 'อนุกรมจาก + ถ่าน (ก่อน D2) ไปขาวัดถ่าน' },
-    { id: 'R4', kind: 'R', value: '1 MΩ', pins: { 1: 'm14a', 2: 'bb.gndT@13' }, sec: H.batt, note: 'ขาวัดถ่านลง GND' },
-    { id: 'C2', kind: 'C', value: '100 nF', pins: { 1: 'm14c', 2: 'bb.gndT@15' }, sec: H.batt, note: 'ตัวกลมสีส้มอิฐ เขียน 104 · ไม่มีขั้ว · ขาวัดถ่านลง GND' },
-    { id: 'D2', kind: 'D', value: '1N5819', pins: { A: 'm10c', K: 'bb.vsys@11' }, sec: H.batt, note: 'ตัวดำทรงกระบอกคาดแถบเทา · แถบ (K) ไปทางราง VSYS · กันไฟ USB ไหลเข้าถ่าน' },
-    { id: 'R7', kind: 'R', value: '10 kΩ', pins: { 1: 'm36b', 2: `m${col(G(PINS.BTN_RED))}b` }, sec: H.probe, note: 'อนุกรมสายวัดน้ำเส้นแดง' },
-    { id: 'R13', kind: 'R', value: '1 kΩ', pins: { 1: 'm36j', 2: `m${col(G(PINS.PROBE_DRIVE))}j` }, sec: H.probe, note: 'อนุกรมสายวัดน้ำเส้นดำ' },
+    { id: 'R8', kind: 'R', value: '330 Ω', pins: { 1: `m${col(G(PINS.LED_RING))}i`, 2: 'm10i' }, sec: H.ring, note: 'อนุกรมที่ DIN ของแหวนไฟ' },
+    { id: 'R9', kind: 'R', value: '2.2 kΩ', pins: { 1: 'm15h', 2: 'm19h' }, sec: H.audio, note: 'ตัวกรองเสียง ขั้นที่ 1' },
+    { id: 'C4', kind: 'C', value: '10 nF', pins: { 1: 'm19j', 2: 'bb.gndB@20' }, sec: H.audio, note: 'ตัวเล็กสีเหลืองส้ม เขียน 103 (ถุงเขียน 10nf) · ไม่มีขั้ว · จุดระหว่าง R9 กับ C5 ลง GND' },
+    { id: 'C5', kind: 'C', value: '100 nF', pins: { 1: 'm19i', 2: 'm23i' }, sec: H.audio, note: 'ตัวกลมสีส้มอิฐ เขียน 104 · ไม่มีขั้ว · กั้นไฟตรงก่อนเข้า PAM8403 (1 พ.ย.: เปลี่ยนจาก 1 µF ตัวดำมีขั้ว — ไม่รู้แน่ว่าไฟฝั่ง LIN สูงหรือต่ำกว่า จึงใช้ตัวไม่มีขั้วแทน)' },
+    { id: 'R3', kind: 'R', value: '1 MΩ', pins: { 1: 'm16b', 2: 'm20b' }, sec: H.batt, note: 'อนุกรมจาก + ถ่าน (ก่อน D2) ไปขาวัดถ่าน' },
+    { id: 'R4', kind: 'R', value: '1 MΩ', pins: { 1: 'm20a', 2: 'bb.gndT@20' }, sec: H.batt, note: 'ขาวัดถ่านลง GND' },
+    { id: 'C2', kind: 'C', value: '100 nF', pins: { 1: 'm20c', 2: 'bb.gndT@21' }, sec: H.batt, note: 'ตัวกลมสีส้มอิฐ เขียน 104 · ไม่มีขั้ว · ขาวัดถ่านลง GND' },
+    { id: 'D2', kind: 'D', value: '1N5819', pins: { A: 'm16c', K: 'bb.vsys@17' }, sec: H.batt, note: 'ตัวดำทรงกระบอกคาดแถบเทา · แถบ (K) ไปทางราง VSYS · กันไฟ USB ไหลเข้าถ่าน' },
+    { id: 'R7', kind: 'R', value: '10 kΩ', pins: { 1: 'm13b', 2: `m${col(G(PINS.BTN_RED))}b` }, sec: H.probe, note: 'อนุกรมสายวัดน้ำเส้นแดง' },
+    { id: 'R13', kind: 'R', value: '1 kΩ', pins: { 1: 'm13j', 2: `m${col(G(PINS.PROBE_DRIVE))}j` }, sec: H.probe, note: 'อนุกรมสายวัดน้ำเส้นดำ' },
   ],
   nets: [
     // บัดกรีก่อน (สายลำโพงบัดกรีกับ PAM8403)
     { id: 'spk+', from: 'amp.L+', to: 'speaker.+', at: [null, null], type: 'audio', sec: H.solder, solder: true },
     { id: 'spk-', from: 'amp.L-', to: 'speaker.-', at: [null, null], type: 'audio', sec: H.solder, solder: true, note: 'ห้ามต่อสายลำโพงลง GND' },
     // บอร์ด + ราง
-    { id: 'brV', from: 'bb.vsys', to: 'bb.vsys2', at: ['bb.vsys@31', 'bb.vsys2@33'], type: 'power', sec: H.power, note: 'เชื่อมรางสองครึ่ง (รางขาดตรงกลาง)' },
-    { id: 'brGT', from: 'bb.gndT', to: 'bb.gndT2', at: ['bb.gndT@31', 'bb.gndT2@33'], type: 'ground', sec: H.power, note: 'เชื่อมรางสองครึ่ง' },
-    { id: 'br3', from: 'bb.3v3', to: 'bb.3v32', at: ['bb.3v3@31', 'bb.3v32@33'], type: 'power', sec: H.power, note: 'เชื่อมรางสองครึ่ง' },
-    { id: 'brGB', from: 'bb.gndB', to: 'bb.gndB2', at: ['bb.gndB@31', 'bb.gndB2@33'], type: 'ground', sec: H.power, note: 'เชื่อมรางสองครึ่ง' },
-    { id: 'gTB', from: 'bb.gndT', to: 'bb.gndB', at: ['bb.gndT@3', 'bb.gndB@3'], type: 'ground', sec: H.power, note: 'ต่อ GND ของรางบนกับรางล่างเข้าหากัน' },
-    { id: '5v', from: 'mcu.5V', to: 'bb.vsys', at: [`m${col('5V')}c`, 'bb.vsys@24'], type: 'power', sec: H.power },
-    { id: 'gnd', from: 'mcu.GND', to: 'bb.gndT', at: [`m${col('GND')}c`, 'bb.gndT@25'], type: 'ground', sec: H.power },
-    { id: '3v3', from: 'mcu.3V3', to: 'bb.3v3', at: [`m${col('3V3')}c`, 'bb.3v3@25'], type: 'power', sec: H.power, note: 'ข้ามบอร์ดไปรางล่าง' },
-    ...radioNets('mcu', 'sx', 'ant', { power: H.power, spi: H.spi, solder: H.solder }),
+    { id: 'gTB', from: 'bb.gndT', to: 'bb.gndB', at: ['bb.gndT@30', 'bb.gndB@30'], type: 'ground', sec: H.power, note: 'ต่อ GND ของรางบนกับรางล่างเข้าหากัน' },
+    { id: '5v', from: 'mcu.5V', to: 'bb.vsys', at: [`m${col('5V')}c`, 'bb.vsys@2'], type: 'power', sec: H.power },
+    { id: 'gnd', from: 'mcu.GND', to: 'bb.gndT', at: [`m${col('GND')}c`, 'bb.gndT@2'], type: 'ground', sec: H.power },
+    { id: '3v3', from: 'mcu.3V3', to: 'bb.3v3', at: [`m${col('3V3')}c`, 'bb.3v3@2'], type: 'power', sec: H.power, note: 'ข้ามบอร์ดไปรางล่าง' },
+    ...radioNets('mcu', 'sx', 'ant', { power: H.power, spi: H.spi, solder: H.solder }, col, { v: 'bb.3v3@6', g: 'bb.gndB@6' }),
     // ปุ่มแดง
     { id: 'sosNO', from: 'btn-sos.NO', to: `mcu.${G(PINS.BTN_RED)}`, at: [null, `m${col(G(PINS.BTN_RED))}c`], type: 'data', sec: H.red },
-    { id: 'sosCOM', from: 'btn-sos.COM', to: 'bb.gndT', at: [null, 'bb.gndT@19'], type: 'ground', sec: H.red },
+    { id: 'sosCOM', from: 'btn-sos.COM', to: 'bb.gndT', at: [null, 'bb.gndT@10'], type: 'ground', sec: H.red },
     // ปุ่มเขียว
     { id: 'ackNO', from: 'btn-ack.NO', to: `mcu.${G(PINS.BTN_GREEN)}`, at: [null, `m${col(G(PINS.BTN_GREEN))}c`], type: 'data', sec: H.green },
-    { id: 'ackCOM', from: 'btn-ack.COM', to: 'bb.gndT', at: [null, 'bb.gndT@22'], type: 'ground', sec: H.green },
+    { id: 'ackCOM', from: 'btn-ack.COM', to: 'bb.gndT', at: [null, 'bb.gndT@11'], type: 'ground', sec: H.green },
     // แหวนไฟ
-    { id: 'din', from: 'ring.DIN', to: 'R8.2', at: [null, 'm34g'], type: 'data', sec: H.ring },
-    { id: 'ring5v', from: 'ring.5V', to: 'bb.vsys', at: [null, 'bb.vsys@22'], type: 'power', sec: H.ring },
-    { id: 'ringG', from: 'ring.GND', to: 'bb.gndT', at: [null, 'bb.gndT@23'], type: 'ground', sec: H.ring },
-    // เสียง (ฝั่งขวาของแผ่นใหญ่ คอลัมน์ 40–48)
-    { id: 'pwm', from: `mcu.${G(PINS.AUDIO_PWM)}`, to: 'R9.1', at: [`m${col(G(PINS.AUDIO_PWM))}j`, 'm40g'], type: 'audio', sec: H.audio, note: 'สายไปฝั่งขวาของแผ่น คอลัมน์ 40' },
-    { id: 'a5v', from: 'amp.+5V', to: 'bb.vsys2', at: [null, 'bb.vsys2@51'], type: 'power', sec: H.audio, note: 'ขาที่ 6 นับจากฝั่ง R+ · อย่าสลับกับ SW ที่อยู่ติดกัน' },
-    { id: 'agnd', from: 'amp.GND', to: 'bb.gndT2', at: [null, 'bb.gndT2@52'], type: 'ground', sec: H.audio, note: 'ใช้ GND ตัวที่อยู่ติดกับ +5V (อีกข้างของ +5V คือ SW) (บนแผ่นมี GND 3 ขา ต่อถึงกันอยู่แล้ว)' },
-    { id: 'ainl', from: 'amp.LIN', to: 'C5.2', at: [null, 'm48g'], type: 'audio', sec: H.audio },
-    { id: 'ainr', from: 'amp.RIN', to: 'bb.gndB2', at: [null, 'bb.gndB2@47'], type: 'ground', sec: H.audio, note: 'ช่องขวาไม่ใช้ ลง GND · ขา SW ปล่อยว่าง (ปล่อยว่าง = เครื่องขยายทำงาน)' },
+    { id: 'din', from: 'ring.DIN', to: 'R8.2', at: [null, 'm10g'], type: 'data', sec: H.ring },
+    { id: 'ring5v', from: 'ring.5V', to: 'bb.vsys', at: [null, 'bb.vsys@10'], type: 'power', sec: H.ring },
+    { id: 'ringG', from: 'ring.GND', to: 'bb.gndT', at: [null, 'bb.gndT@12'], type: 'ground', sec: H.ring },
+    // เสียง (คอลัมน์ 15–23)
+    { id: 'pwm', from: `mcu.${G(PINS.AUDIO_PWM)}`, to: 'R9.1', at: [`m${col(G(PINS.AUDIO_PWM))}j`, 'm15g'], type: 'audio', sec: H.audio, note: 'สายไปตัวกรองเสียง คอลัมน์ 15' },
+    { id: 'a5v', from: 'amp.+5V', to: 'bb.vsys', at: [null, 'bb.vsys@26'], type: 'power', sec: H.audio, note: 'ขาที่ 6 นับจากฝั่ง R+ · อย่าสลับกับ SW ที่อยู่ติดกัน' },
+    { id: 'agnd', from: 'amp.GND', to: 'bb.gndT', at: [null, 'bb.gndT@27'], type: 'ground', sec: H.audio, note: 'ใช้ GND ตัวที่อยู่ติดกับ +5V (อีกข้างของ +5V คือ SW) (บนแผ่นมี GND 3 ขา ต่อถึงกันอยู่แล้ว)' },
+    { id: 'ainl', from: 'amp.LIN', to: 'C5.2', at: [null, 'm23g'], type: 'audio', sec: H.audio },
+    { id: 'ainr', from: 'amp.RIN', to: 'bb.gndB', at: [null, 'bb.gndB@24'], type: 'ground', sec: H.audio, note: 'ช่องขวาไม่ใช้ ลง GND · ขา SW ปล่อยว่าง (ปล่อยว่าง = เครื่องขยายทำงาน)' },
     // วัดถ่าน + ไฟสำรอง
-    { id: 'adc', from: `mcu.${G(PINS.BATT_ADC)}`, to: 'R3.2', at: [`m${col(G(PINS.BATT_ADC))}c`, 'm14d'], type: 'data', sec: H.batt },
-    { id: 'bat+', from: 'battery.+', to: 'D2.A', at: [null, 'm10a'], type: 'power', sec: H.batt, note: 'ต่อสายให้เสร็จก่อน ใส่ถ่านทีหลังสุด · ระวังสายแดงแตะราง GND = ลัดวงจรถ่าน · รางถ่านไม่มีสวิตช์ ถอดถ่านแทนการปิด' },
-    { id: 'bat-', from: 'battery.-', to: 'bb.gndT', at: [null, 'bb.gndT@9'], type: 'ground', sec: H.batt },
+    { id: 'adc', from: `mcu.${G(PINS.BATT_ADC)}`, to: 'R3.2', at: [`m${col(G(PINS.BATT_ADC))}c`, 'm20d'], type: 'data', sec: H.batt },
+    { id: 'bat+', from: 'battery.+', to: 'D2.A', at: [null, 'm16a'], type: 'power', sec: H.batt, note: 'ต่อสายให้เสร็จก่อน ใส่ถ่านทีหลังสุด · ระวังสายแดงแตะราง GND = ลัดวงจรถ่าน · รางถ่านไม่มีสวิตช์ ถอดถ่านแทนการปิด' },
+    { id: 'bat-', from: 'battery.-', to: 'bb.gndT', at: [null, 'bb.gndT@15'], type: 'ground', sec: H.batt },
     // สายวัดน้ำ
-    { id: 'prR', from: 'probe.red', to: 'R7.1', at: [null, 'm36a'], type: 'data', sec: H.probe },
-    { id: 'prB', from: 'probe.black', to: 'R13.1', at: [null, 'm36i'], type: 'data', sec: H.probe },
+    { id: 'prR', from: 'probe.red', to: 'R7.1', at: [null, 'm13a'], type: 'data', sec: H.probe },
+    { id: 'prB', from: 'probe.black', to: 'R13.1', at: [null, 'm13i'], type: 'data', sec: H.probe },
   ],
   // ลำดับต่อ (wiring-breadboard ข้อ 4) · wire = สาย 1 เส้น · part = เสียบชิ้น 1 ชิ้น · info / test = อ่านหรือหยุดทดสอบ
   seq: [
@@ -113,11 +113,11 @@ export const BB_HOUSE = {
     { kind: 'info', sec: H.solder, part: 'btn-sos', title: 'บัดกรีสายเข้าขาปุ่มทั้งสอง', text: 'ไมโครสวิตช์สีฟ้า (BLEE) ข้างปุ่มมี 3 ขา พิมพ์ COM ① · NC ② · NO ③ ไว้ข้างตัว · ใช้ COM ① กับ NO ③ (NO คือขากลาง · NC ② ไม่ใช้) · ขั้วหลอดไฟ 2 ขาใหญ่ที่ตัวปุ่มไม่ต้องต่อ · ลองด้วยมัลติมิเตอร์: COM–NO ดังเฉพาะตอนกด' },
     { kind: 'test', sec: H.multi, title: 'หยุดทดสอบ: มัลติมิเตอร์ก่อนจ่ายไฟ', text: 'โหมดเสียงต่อ: ปลายสายแต่ละเส้นกับจุดบัดกรีต้องดัง · VCC กับ GND ของโมดูลต้องไม่ดัง (ถ้าดัง = ลัดวงจร ห้ามเสียบไฟ) · ลำโพงวัด Ω ได้ ~3–8 Ω', pass: 'ครบทุกข้อ (จดใน test-plan หัวข้อ B1)' },
     { kind: 'info', sec: H.rxFirst, title: 'ต่อตัวรับให้ผ่านก่อน', text: 'ไปที่แท็บ "Breadboard ตัวรับ" ต่อจนขั้นสุดท้ายและ begin() ผ่าน แล้วค่อยกลับมาต่อกล่องบ้าน' },
-    { kind: 'part', part: 'mcu', sec: H.power, text: 'เสียบ ESP32-C3 คร่อมร่องกลาง ขาแถวบนลงแถว d คอลัมน์ 24–31 ขาแถวล่างลงแถว h · ด้านชิปขึ้น หัว USB-C ชี้ไปทางซ้าย · แถวบน = 5V G 3.3 4 3 2 1 0 (ตัวหนังสืออยู่ใต้บอร์ด ก่อนเสียบพลิกดูให้แน่ใจ)', why: 'คร่อมร่องกลางเพื่อไม่ให้ขาแถวบนกับแถวล่างต่อถึงกันเอง · หัว USB ชี้ซ้ายทำให้แถวบนเป็นขาไฟ (5V G 3.3) กับขา 0–4 ส่วนแถวล่างเป็นขาที่ต่อวิทยุ สายวิทยุจึงสั้นและไม่ข้ามไปมา' },
-    { kind: 'wire', net: 'brV' }, { kind: 'wire', net: 'brGT' }, { kind: 'wire', net: 'br3' }, { kind: 'wire', net: 'brGB' }, { kind: 'wire', net: 'gTB' },
+    { kind: 'part', part: 'mcu', sec: H.power, text: 'เสียบ ESP32-C3 คร่อมร่องกลาง ขาแถวบนลงแถว d คอลัมน์ 1–8 ขาแถวล่างลงแถว h · ด้านชิปขึ้น หัว USB-C ชี้ไปทางซ้ายพ้นขอบแผ่น · แถวบน = 5V G 3.3 4 3 2 1 0 (ตัวหนังสืออยู่ใต้บอร์ด ก่อนเสียบพลิกดูให้แน่ใจ)', why: 'คร่อมร่องกลางเพื่อไม่ให้ขาแถวบนกับแถวล่างต่อถึงกันเอง · หัว USB ชี้ซ้ายทำให้แถวบนเป็นขาไฟ (5V G 3.3) กับขา 0–4 ส่วนแถวล่างเป็นขาที่ต่อวิทยุ สายวิทยุจึงสั้นและไม่ข้ามไปมา' },
+    { kind: 'wire', net: 'gTB' },
     { kind: 'wire', net: '5v' }, { kind: 'wire', net: 'gnd' }, { kind: 'wire', net: '3v3' },
     { kind: 'part', part: 'C6' },
-    { kind: 'test', sec: H.power, title: 'หยุดทดสอบ: วัดไฟรางก่อนต่อวิทยุ', text: 'ยังไม่ต่อสายวิทยุ · เสียบ USB · มัลติมิเตอร์โหมด V (DC) สายดำแตะราง GND สายแดงแตะรางแดงบน แล้วรางแดงล่าง · เสร็จแล้วถอด USB ก่อนไปขั้นถัดไป', pass: 'รางแดงบน ≈ 4.6–5.2 V · รางแดงล่าง ≈ 3.2–3.4 V · ถ้ารางล่างได้ ~5 V = สายสลับ ห้ามต่อวิทยุ', why: 'เช็กก่อนว่ารางที่วิทยุจะเสียบเป็น 3.3 V จริง ถ้าเป็น 5 V วิทยุจะเสียทันทีที่เสียบไฟ' },
+    { kind: 'test', sec: H.power, title: 'หยุดทดสอบ: วัดไฟรางก่อนต่อวิทยุ', text: 'ก่อนเสียบ USB: มัลติมิเตอร์โหมดเสียง แตะรูหัวกับรูท้ายของรางเดียวกันทั้ง 4 เส้น ถ้าไม่ดัง = รางขาดกลาง ให้ต่อสายเชื่อมสองครึ่งเพิ่ม · ยังไม่ต่อสายวิทยุ · แล้วเสียบ USB โหมด V (DC) สายดำแตะราง GND สายแดงแตะรางแดงบน แล้วรางแดงล่าง · เสร็จแล้วถอด USB ก่อนไปขั้นถัดไป', pass: 'รางแดงบน ≈ 4.6–5.2 V · รางแดงล่าง ≈ 3.2–3.4 V · ถ้ารางล่างได้ ~5 V = สายสลับ ห้ามต่อวิทยุ', why: 'เช็กก่อนว่ารางที่วิทยุจะเสียบเป็น 3.3 V จริง ถ้าเป็น 5 V วิทยุจะเสียทันทีที่เสียบไฟ' },
     { kind: 'wire', net: 'r33' }, { kind: 'wire', net: 'rgnd' },
     { kind: 'part', part: 'C7' }, { kind: 'part', part: 'C8' },
     { kind: 'wire', net: 'sck' }, { kind: 'wire', net: 'miso' }, { kind: 'wire', net: 'mosi' }, { kind: 'wire', net: 'nss' },
@@ -148,17 +148,17 @@ const R = { solder: 0, multi: 1, board: 2, next: 3 };
 export const BB_RX = {
   key: 'bbRx',
   sections: ['บัดกรีก่อน', 'เช็กมัลติมิเตอร์', 'บอร์ด + วิทยุ', 'ต่อไป'],
-  mcu: mcuPlace('rx-mcu'),
+  mcu: mcuPlace('rx-mcu', RX_MCU),
   rails: { VSYS: 'bb.vsys', GND: 'bb.gndB', '3V3': 'bb.3v3' },
   parts: [
     { id: 'rxC1', kind: 'E', value: '10 µF', pins: { '+': 'bb.3v3@27', '-': 'bb.gndB@27' }, sec: R.board, note: 'ตัวดำ 10 µF · ชิดจุดที่สายไฟวิทยุเสียบ · ขาสั้นฝั่งแถบ (−) ลง GND · รอบซื้อ 26 ต.ค. มี 10 µF ตัวเดียว (ใช้ที่กล่องบ้าน) ต้องหาเพิ่ม 1 ตัว' },
     { id: 'rxC2', kind: 'C', value: '100 nF', pins: { 1: 'bb.3v3@29', 2: 'bb.gndB@29' }, sec: R.board, note: 'ตัวกลมสีส้มอิฐ เขียน 104 · ไม่มีขั้ว · ชิดจุดที่สายไฟวิทยุเสียบ' },
-    { id: 'rxR1', kind: 'R', value: '10 kΩ', pins: { 1: `m${col(G(PINS.RADIO_NSS))}j`, 2: 'bb.3v3@28' }, sec: R.board, note: 'ดึงขา NSS ขึ้น 3V3' },
+    { id: 'rxR1', kind: 'R', value: '10 kΩ', pins: { 1: `m${colR(G(PINS.RADIO_NSS))}j`, 2: 'bb.3v3@28' }, sec: R.board, note: 'ดึงขา NSS ขึ้น 3V3' },
   ],
   nets: [
-    { id: '3v3', from: 'rx-mcu.3V3', to: 'bb.3v3', at: [`m${col('3V3')}c`, 'bb.3v3@25'], type: 'power', sec: R.board, note: 'ข้ามบอร์ดไปรางล่าง' },
-    { id: 'gnd', from: 'rx-mcu.GND', to: 'bb.gndB', at: [`m${col('GND')}c`, 'bb.gndB@24'], type: 'ground', sec: R.board, note: 'ข้ามบอร์ดไปรางล่าง' },
-    ...radioNets('rx-mcu', 'rx-sx', 'rx-ant', { power: R.board, spi: R.board, solder: R.solder }),
+    { id: '3v3', from: 'rx-mcu.3V3', to: 'bb.3v3', at: [`m${colR('3V3')}c`, 'bb.3v3@25'], type: 'power', sec: R.board, note: 'ข้ามบอร์ดไปรางล่าง' },
+    { id: 'gnd', from: 'rx-mcu.GND', to: 'bb.gndB', at: [`m${colR('GND')}c`, 'bb.gndB@24'], type: 'ground', sec: R.board, note: 'ข้ามบอร์ดไปรางล่าง' },
+    ...radioNets('rx-mcu', 'rx-sx', 'rx-ant', { power: R.board, spi: R.board, solder: R.solder }, colR, { v: 'bb.3v3@30', g: 'bb.gndB@30' }),
   ],
   seq: [
     { kind: 'info', sec: R.solder, title: 'ก่อนเริ่ม: กติกาความปลอดภัย', text: 'ถอดสาย USB และถอดถ่านออกทุกครั้งก่อนเสียบหรือถอดสาย · เอาเทปติดเขียน "3.3V" ที่รางแดงล่าง (ตัวรับใช้แค่รางนี้ รางแดงบนไม่ต้องต่ออะไร) · ชิ้นที่มีขั้ว (ตัวเก็บประจุตัวดำ ไดโอด) ดูทิศทุกครั้ง · ใช้ถ่าน AA อัลคาไลน์หรือถ่านชาร์จ ไม่ใช้ถ่านลิเธียม', why: 'วิทยุทนไฟได้ไม่เกินราว 3.6 V ถ้าเสียบผิดไปรางแดงบน (5 V) ครั้งเดียววิทยุเสีย · เสียบสายตอนมีไฟอาจแตะผิดจุดจนลัดวงจรโดยไม่ตั้งใจ · ถ่านลิเธียมไฟสูงกว่า (~1.8 V/ก้อน) ทำให้ไฟถ่านสูงกว่าไฟ USB' },
@@ -191,8 +191,6 @@ for (const p of [...BB_HOUSE.parts, ...BB_RX.parts]) if (p.kind === 'R') p.note 
 
 /* ---- "ทำไมต่อแบบนี้" ของทุกสาย/ทุกชิ้น (ภาษาง่าย แสดงในการ์ดขั้นตอน) */
 const WHY = {
-  brV: 'รางของแผ่นนี้ขาดตรงกลาง ถ้าไม่เชื่อม ครึ่งขวาจะไม่มีไฟ', brGT: 'รางของแผ่นนี้ขาดตรงกลาง ถ้าไม่เชื่อม ครึ่งขวาจะไม่มี GND',
-  br3: 'รางของแผ่นนี้ขาดตรงกลาง ถ้าไม่เชื่อม ครึ่งขวาจะไม่มีไฟ 3.3 V', brGB: 'รางของแผ่นนี้ขาดตรงกลาง ถ้าไม่เชื่อม ครึ่งขวาจะไม่มี GND',
   gTB: 'ทุกชิ้นต้องอ้างอิง 0 V จุดเดียวกัน สัญญาณที่คุยกันถึงจะอ่านถูก จึงต่อ GND รางบนกับรางล่างเข้าหากัน',
   '5v': 'สาย USB ให้ไฟ 5 V เข้าบอร์ด บอร์ดปล่อยออกที่ขา 5V ไปทำรางให้ชิ้นที่กินไฟเยอะ (แหวนไฟ เครื่องขยายเสียง) ใช้ร่วมกัน',
   gnd: 'GND ของบอร์ดคือ 0 V ของทั้งวงจร',
@@ -213,7 +211,6 @@ const WHY = {
   din: 'สายข้อมูลสี บอร์ดบอกแต่ละดวงว่าติดสีอะไร ผ่าน R8 ก่อนเข้าแหวน',
   ring5v: 'แหวน 12 ดวงสว่างเต็มกินไฟได้ราว 0.7 A (wiring-breadboard ข้อ 6) จึงใช้ราง 5 V ไม่ใช้ 3.3 V ของบอร์ด · โค้ดตั้งความสว่างไว้ 25%',
   ringG: 'GND ของแหวนไฟต้องเป็นจุดเดียวกับบอร์ด สัญญาณสีถึงจะอ่านถูก',
-  hbV: 'ส่งไฟ 5 V ไปแผ่นครึ่งที่วางเครื่องขยายเสียง', hbG: 'ส่ง GND ไปแผ่นครึ่งที่วางเครื่องขยายเสียง',
   pwm: 'บอร์ดนี้ไม่มีขาส่งเสียงโดยตรง จึงส่งสัญญาณเปิด-ปิดเร็ว ๆ ตามเสียงที่ต้องการ แล้วให้ R9 + C4 กรองให้เรียบก่อนเข้าเครื่องขยาย',
   a5v: 'เครื่องขยายเสียงใช้ไฟ 5 V (ทนได้ไม่เกิน 5.5 V) · ขา SW ปล่อยว่าง = เครื่องขยายทำงาน',
   agnd: 'GND ของเครื่องขยายต้องเป็นจุดเดียวกับบอร์ด',
