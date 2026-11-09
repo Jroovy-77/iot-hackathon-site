@@ -409,7 +409,11 @@ function bbSetup(b, data, docSec) {
     const ids = s.kind === 'wire' ? [data.nets[s.wire].from, data.nets[s.wire].to].map((n) => n.split('.')[0]) : s.part ? [s.part] : [];
     for (const id of ids) if (b.partOf[id] && !(id in b.appear)) b.appear[id] = k;
   });
-  b.endText = (i, side) => { const h = data.nets[i].at[side]; return h ? holeText(h) : 'บัดกรีที่ขา/แผ่นของชิ้น'; };
+  b.endText = (i, side) => {
+    const n = data.nets[i]; const h = n.at[side]; if (h) return holeText(h);
+    // รางถ่าน สายวัดน้ำ ลำโพง มีสายของตัวเอง: ปลายสายเสียบรูอีกด้าน ไม่ได้บัดกรีกับชิ้น
+    return /^(battery|probe|speaker)\./.test(side ? n.to : n.from) ? 'สายของชิ้นเอง (ไม่ต้องบัดกรี)' : 'บัดกรีที่ขา/แผ่นของชิ้น';
+  };
   b.partHoles = (id) => {
     const p = data.parts.find((x) => x.id === id);
     if (p) return Object.entries(p.pins).map(([t, h]) => ({ pin: `${id}.${t}`, hole: h, text: holeText(h) }));

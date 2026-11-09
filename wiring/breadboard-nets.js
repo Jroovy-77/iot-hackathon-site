@@ -68,9 +68,6 @@ export const BB_HOUSE = {
     { id: 'R13', kind: 'R', value: '1 kΩ', pins: { 1: 'm13j', 2: `m${col(G(PINS.PROBE_DRIVE))}j` }, sec: H.probe, note: 'อนุกรมสายวัดน้ำเส้นดำ' },
   ],
   nets: [
-    // บัดกรีก่อน (สายลำโพงบัดกรีกับ PAM8403)
-    { id: 'spk+', from: 'amp.L+', to: 'speaker.+', at: [null, null], type: 'audio', sec: H.solder, solder: true },
-    { id: 'spk-', from: 'amp.L-', to: 'speaker.-', at: [null, null], type: 'audio', sec: H.solder, solder: true, note: 'ห้ามต่อสายลำโพงลง GND' },
     // บอร์ด + ราง
     { id: 'gTB', from: 'bb.gndT', to: 'bb.gndB', at: ['bb.gndT@30', 'bb.gndB@30'], type: 'ground', sec: H.power, note: 'ต่อ GND ของรางบนกับรางล่างเข้าหากัน' },
     { id: '5v', from: 'mcu.5V', to: 'bb.vsys', at: [`m${col('5V')}c`, 'bb.vsys@2'], type: 'power', sec: H.power },
@@ -93,6 +90,11 @@ export const BB_HOUSE = {
     { id: 'agnd', from: 'amp.GND', to: 'bb.gndT', at: [null, 'bb.gndT@27'], type: 'ground', sec: H.audio, note: 'ใช้ GND ตัวที่อยู่ติดกับ +5V (อีกข้างของ +5V คือ SW) (บนแผ่นมี GND 3 ขา ต่อถึงกันอยู่แล้ว)' },
     { id: 'ainl', from: 'amp.LIN', to: 'C5.2', at: [null, 'm23g'], type: 'audio', sec: H.audio },
     { id: 'ainr', from: 'amp.RIN', to: 'bb.gndB', at: [null, 'bb.gndB@24'], type: 'ground', sec: H.audio, note: 'ช่องขวาไม่ใช้ ลง GND · ขา SW ปล่อยว่าง (ปล่อยว่าง = เครื่องขยายทำงาน)' },
+    // ลำโพงต่อผ่าน breadboard (ไม่บัดกรีลำโพงตรงเข้า PAM8403): คอลัมน์ 27 = L+ · คอลัมน์ 29 = L− · สองคอลัมน์นี้ห้ามมีอย่างอื่น
+    { id: 'spk+', from: 'amp.L+', to: 'speaker.+', at: [null, 'm27a'], type: 'audio', sec: H.audio, note: 'สายที่บัดกรีไว้ที่ L+ ของ PAM8403 (ขาที่ 4 นับจากฝั่ง R+) · คอลัมน์ 27 ใช้เฉพาะลำโพง' },
+    { id: 'spkR', from: 'speaker.+', to: 'amp.L+', at: [null, 'm27b'], type: 'audio', sec: H.audio, note: 'สายแดงของลำโพง · ปลั๊กลำโพง: เสียบหัวเข็มสายจัมเปอร์เข้าช่องปลั๊ก หรือตัดปลั๊กแล้วชุบตะกั่วปลายสาย' },
+    { id: 'spk-', from: 'amp.L-', to: 'speaker.-', at: [null, 'm29a'], type: 'audio', sec: H.audio, note: 'สายที่บัดกรีไว้ที่ L− (ขาที่ 3 นับจากฝั่ง R+) · ห้ามต่อลงราง GND' },
+    { id: 'spkB', from: 'speaker.-', to: 'amp.L-', at: [null, 'm29b'], type: 'audio', sec: H.audio, note: 'สายดำของลำโพง · ห้ามต่อลงราง GND' },
     // วัดถ่าน + ไฟสำรอง
     { id: 'adc', from: `mcu.${G(PINS.BATT_ADC)}`, to: 'R3.2', at: [`m${col(G(PINS.BATT_ADC))}c`, 'm20d'], type: 'data', sec: H.batt },
     { id: 'bat+', from: 'battery.+', to: 'D2.A', at: [null, 'm16a'], type: 'power', sec: H.batt, note: 'ต่อสายให้เสร็จก่อน ใส่ถ่านทีหลังสุด · ระวังสายแดงแตะราง GND = ลัดวงจรถ่าน · รางถ่านไม่มีสวิตช์ ถอดถ่านแทนการปิด' },
@@ -107,9 +109,7 @@ export const BB_HOUSE = {
     { kind: 'info', sec: H.solder, part: 'sx', title: 'บัดกรีสายเข้าโมดูลวิทยุ', text: 'โมดูล XL1276-P01 ขาห่าง ~2 มม. เสียบ breadboard ตรง ๆ ไม่ได้ · บัดกรีสาย 8 เส้นตามตัวหนังสือด้านหลัง: VCC, GND, SCK, MISO, MOSI, NSS, DIO0, REST · ชุบตะกั่วปลายสายก่อน ไม่เกิน 3 วิ/จุด · หยดกาวร้อนยึดสาย · ทำทั้ง 2 โมดูล (กล่องบ้าน + ตัวรับ) · ขา GND มี 3 จุด ใช้จุดเดียวพอ (ต่อถึงกันในโมดูล)' },
     { kind: 'wire', net: 'ant', text: 'บัดกรีขาตรงของเสาสปริงที่แถมมาเข้าแผ่น ANT (มุมเดียวกับ GND อีกจุด) เป็นจุดสุดท้าย' },
     { kind: 'info', sec: H.solder, part: 'ring', title: 'บัดกรีสาย 3 เส้นเข้าแหวนไฟ', text: 'แหวน CJMCU-2812B-12 มีจุดบัดกรี 4 จุดที่ขอบด้านหลัง เรียงบนลงล่าง DI · 5V · GND · DO · บัดกรี 3 จุดแรก (DI 5V GND) · DO ไม่ใช้ (ไว้ต่อแหวนวงถัดไป) · ระวังตะกั่วเชื่อมจุดที่ติดกัน โดยเฉพาะ 5V กับ GND' },
-    { kind: 'info', sec: H.solder, part: 'amp', title: 'บัดกรีสายเข้า PAM8403', text: 'แผ่นแดงมีขาแถวเดียว 11 ขา มองด้านที่มีชิป บนลงล่าง: R+ R− L− L+ GND +5V SW GND LIN GND RIN · ถ้าพลิกดูด้านหลัง ลำดับจะกลับ (RIN GND LIN GND SW +5V GND L+ L− R− R+) ยึดตัวหนังสือบนแผ่น · บัดกรีสาย 4 เส้นที่ +5V, GND (ตัวที่อยู่ติดกับ +5V), LIN, RIN · SW / R+ / R− / GND อีก 2 ตัวปล่อยว่าง' },
-    { kind: 'wire', net: 'spk+', text: 'สายแดงของลำโพง (+) เข้า L+ ของ PAM8403 · ลำโพงมีปลั๊กเล็กอยู่ ถ้าไม่อยากตัด ให้บัดกรีสายต่อที่ปลายสายแดง-ดำแทน' },
-    { kind: 'wire', net: 'spk-', text: 'สายดำของลำโพง (−) เข้า L− · ห้ามต่อลง GND' },
+    { kind: 'info', sec: H.solder, part: 'amp', title: 'บัดกรีสายเข้า PAM8403', text: 'แผ่นแดงมีขาแถวเดียว 11 ขา มองด้านที่มีชิป บนลงล่าง: R+ R− L− L+ GND +5V SW GND LIN GND RIN · ถ้าพลิกดูด้านหลัง ลำดับจะกลับ (RIN GND LIN GND SW +5V GND L+ L− R− R+) ยึดตัวหนังสือบนแผ่น · บัดกรีสาย 6 เส้นที่ +5V, GND (ตัวที่อยู่ติดกับ +5V), LIN, RIN, L+, L− · ใช้สายจัมเปอร์ที่ปลายอีกด้านเป็นหัวเข็ม เพื่อเสียบ breadboard · ลำโพงไม่ต้องบัดกรี (ต่อผ่าน breadboard ตอนขั้นเสียง) · SW / R+ / R− / GND อีก 2 ตัวปล่อยว่าง' },
     { kind: 'info', sec: H.solder, part: 'btn-sos', title: 'บัดกรีสายเข้าขาปุ่มทั้งสอง', text: 'ไมโครสวิตช์สีฟ้า (BLEE) ข้างปุ่มมี 3 ขา พิมพ์ COM ① · NC ② · NO ③ ไว้ข้างตัว · ใช้ COM ① กับ NO ③ (NO คือขากลาง · NC ② ไม่ใช้) · ขั้วหลอดไฟ 2 ขาใหญ่ที่ตัวปุ่มไม่ต้องต่อ · ลองด้วยมัลติมิเตอร์: COM–NO ดังเฉพาะตอนกด' },
     { kind: 'test', sec: H.multi, title: 'หยุดทดสอบ: มัลติมิเตอร์ก่อนจ่ายไฟ', text: 'โหมดเสียงต่อ: ปลายสายแต่ละเส้นกับจุดบัดกรีต้องดัง · VCC กับ GND ของโมดูลต้องไม่ดัง (ถ้าดัง = ลัดวงจร ห้ามเสียบไฟ) · ลำโพงวัด Ω ได้ ~3–8 Ω', pass: 'ครบทุกข้อ (จดใน test-plan หัวข้อ B1)' },
     { kind: 'info', sec: H.rxFirst, title: 'ต่อตัวรับให้ผ่านก่อน', text: 'ไปที่แท็บ "Breadboard ตัวรับ" ต่อจนขั้นสุดท้ายและ begin() ผ่าน แล้วค่อยกลับมาต่อกล่องบ้าน' },
@@ -133,6 +133,10 @@ export const BB_HOUSE = {
     { kind: 'wire', net: 'pwm' },
     { kind: 'part', part: 'R9' }, { kind: 'part', part: 'C4' }, { kind: 'part', part: 'C5' },
     { kind: 'wire', net: 'a5v' }, { kind: 'wire', net: 'agnd' }, { kind: 'wire', net: 'ainl' }, { kind: 'wire', net: 'ainr' },
+    { kind: 'wire', net: 'spk+', text: 'สายจาก L+ ของ PAM8403 เสียบรู 27a · คอลัมน์ 27 ใช้กับลำโพงเท่านั้น' },
+    { kind: 'wire', net: 'spkR', text: 'สายแดงของลำโพงเสียบรู 27b (คอลัมน์เดียวกับ L+) · ปลั๊กลำโพง: เสียบหัวเข็มสายจัมเปอร์เข้าช่องปลั๊ก หรือตัดปลั๊กแล้วชุบตะกั่วปลายสาย' },
+    { kind: 'wire', net: 'spk-', text: 'สายจาก L− ของ PAM8403 เสียบรู 29a · ห้ามลงราง GND' },
+    { kind: 'wire', net: 'spkB', text: 'สายดำของลำโพงเสียบรู 29b (คอลัมน์เดียวกับ L−) · เว้นคอลัมน์ 28 ไว้ ไม่ให้สองสายแตะกัน' },
     { kind: 'test', sec: H.audio, title: 'หยุดทดสอบ B3.5: เสียง', text: 'กดแดงแล้วรอ ACK = บี๊ปยาว · รอบนี้เป็นเสียงบี๊ป ยังไม่มีเสียงพูด', pass: 'ได้ยินชัดจากห้องข้าง ๆ (จดคนได้ยิน/คนฟัง)' },
     { kind: 'part', part: 'R3' }, { kind: 'part', part: 'R4' }, { kind: 'part', part: 'C2' }, { kind: 'wire', net: 'adc' },
     { kind: 'part', part: 'D2' }, { kind: 'wire', net: 'bat+' }, { kind: 'wire', net: 'bat-' },
@@ -204,6 +208,8 @@ const WHY = {
   rst: 'ให้บอร์ดสั่งเริ่มวิทยุใหม่ได้เองถ้าวิทยุค้าง ไม่ต้องถอดไฟ',
   ant: 'วิทยุต้องมีเสาก่อนส่งทุกครั้ง ถ้าไม่มีเสา พลังงานที่ส่งออกไม่ได้จะย้อนกลับเข้าชิปจนเสียได้ จึงบัดกรีเสาก่อนเสียบไฟ',
   'spk+': 'PAM8403 ขับลำโพงด้วยสองขาที่สลับกันมีไฟ (L+ และ L−) ลำโพงจึงต่อคร่อมสองขานี้ตรง ๆ',
+  spkR: 'สายแดงลำโพงอยู่คอลัมน์เดียวกับ L+ จึงต่อถึงกันผ่านแถบโลหะใต้รู ไม่ต้องบัดกรีลำโพง ถอดเปลี่ยนลำโพงได้',
+  spkB: 'สายดำลำโพงอยู่คอลัมน์เดียวกับ L− · L+ กับ L− ต้องอยู่คนละคอลัมน์ ถ้าอยู่คอลัมน์เดียวกัน = ลัดวงจรเครื่องขยาย',
   'spk-': 'L− ไม่ใช่ GND ถ้าต่อ L− ลง GND = ลัดวงจร เครื่องขยายเสียงร้อนและเสียได้',
   sosNO: 'ปกติขา 0 มีไฟ 3.3 V จากตัวดึงขึ้นในชิป พอกดปุ่ม NO ต่อกับ C ขา 0 ถูกดึงลง 0 V บอร์ดจึงรู้ว่ากด · ใช้ NO เพราะปล่อยแล้วไม่ต่อ กดแล้วต่อ',
   sosCOM: 'C (COM) ของปุ่มต่อ GND ไว้ เป็นปลายที่ดึงขาลงตอนกด',

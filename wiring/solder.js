@@ -136,12 +136,12 @@ for (const sec of SECTIONS) {
   main.append(el);
 }
 // สายที่แค่ชุบตะกั่วปลาย (ไม่ได้บัดกรีกับชิ้น)
-const tin = ALL.filter((e) => ['battery', 'probe'].includes(e.part));
+const tin = ALL.filter((e) => ['battery', 'probe', 'speaker'].includes(e.part));
 const tinEl = document.createElement('section'); tinEl.className = 'part';
 tinEl.innerHTML = `<header><h2>ชุบตะกั่วปลายสาย (ไม่ต้องบัดกรีกับชิ้น)</h2><p class="qty">${tin.length} ปลาย · ทำให้ปลายสายแข็ง เสียบ breadboard ได้</p></header>
   <div class="info wide"><table><thead><tr><th>สาย</th><th>ปลายอีกด้าน</th><th>ทำอย่างไร</th></tr></thead><tbody>
   ${tin.map((e) => `<tr><td><b>${esc(bbShort(`${e.part}.${e.pin}`))}</b></td><td>${esc(destOf(e))}<span class="hole mono">${esc(holeText(e.otherHole))}</span></td>
-  <td>${e.part === 'battery' ? 'ปอกปลายประมาณ 5 มม. บิดเกลียวแล้วชุบตะกั่ว (หรือบัดกรีต่อหัวเข็ม)' : 'ปลายฝั่งบอร์ดชุบตะกั่ว · ปลายที่จุ่มน้ำปอกทองแดงเปลือยไว้ ไม่ต้องชุบ'}</td></tr>`).join('')}
+  <td>${e.part === 'speaker' ? 'ไม่ต้องตัดก็ได้: เสียบหัวเข็มสายจัมเปอร์เข้าช่องปลั๊ก · หรือตัดปลั๊ก ปอกปลาย 5 มม. แล้วชุบตะกั่ว' : e.part === 'battery' ? 'ปอกปลายประมาณ 5 มม. บิดเกลียวแล้วชุบตะกั่ว (หรือบัดกรีต่อหัวเข็ม)' : 'ปลายฝั่งบอร์ดชุบตะกั่ว · ปลายที่จุ่มน้ำปอกทองแดงเปลือยไว้ ไม่ต้องชุบ'}</td></tr>`).join('')}
   </tbody></table></div>`;
 main.append(tinEl);
 document.getElementById('sum').innerHTML = `<b>${total} จุด</b> จาก ${summary.length} ชนิด · ` + summary.map(([t, n, c]) => `${esc(t)} ${n}${c > 1 ? ` × ${c} ตัว` : ''}`).join(' · ')
