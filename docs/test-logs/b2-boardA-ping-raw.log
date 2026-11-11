@@ -1,0 +1,76 @@
+
+=== capture COM4 2026-11-07 21:04:06 ===
+
+=== capture COM4 2026-11-07 21:09:53 ===
+
+=== capture COM4 2026-11-07 21:12:08 ===
+# --- 7 พ.ย. 21:2x บอร์ด A (กล่องบ้าน, COM4, serial 24:EC:4A:AF:64:44) หลังถอดสาย DIN แหวนไฟออกจาก R8 ---
+# ก่อนถอด: reset ทุกครั้งได้ boot:0x5 DOWNLOAD (GPIO9 ถูกดึงลง) ไม่มีข้อความเลย
+ESP-ROM:esp32c3-api1-20210207
+rst:0x15 (USB_UART_CHIP_RESET),boot:0xd (SPI_FAST_FLASH_BOOT)
+# FloodLink PING (board A) freq=923.2MHz bw=125kHz sf=9 cr=4/5 sync=0x12 tx=14dBm preamble=8 pins_verified=1
+# pins SCK=6 MISO=5 MOSI=7 NSS=8 DIO0=3 RESET=10
+# RADIO begin=0 OK
+
+=== B2 run 2026-11-07 23:30:38 ===
+
+# [sent g]
+
+# FloodLink PING (board A) freq=923.2MHz bw=125kHz sf=9 cr=4/5 sync=0x12 tx=14dBm preamble=8 pins_verified=1
+# pins SCK=6 MISO=5 MOSI=7 NSS=8 DIO0=3 RESET=10
+# RADIO begin=0 OK
+# type g + Enter to start (radio transmits only after this)
+# antenna on both boards? starting 50 rounds
+PING,n,ok,rtt_ms,rssi,snr
+PING,1,1,302,-64,9.5
+PING,2,1,302,-64,9.2
+PING,3,1,302,-74,10.8
+PING,4,1,302,-69,9.8
+PING,5,1,302,-68,11.2
+PING,6,1,302,-67,12.8
+PING,7,1,302,-67,13.0
+PING,8,1,302,-69,10.0
+PING,9,1,302,-69,9.5
+PING,10,1,302,-71,13.0
+PING,11,1,302,-68,9.8
+PING,12,1,302,-71,13.0
+PING,13,1,302,-72,12.5
+PING,14,1,302,-69,8.8
+PING,15,1,302,-70,13.2
+PING,16,1,302,-73,12.8
+PING,17,1,302,-68,9.5
+PING,18,1,302,-79,11.0
+PING,19,1,302,-70,12.0
+PING,20,1,302,-68,12.5
+PING,21,1,302,-68,11.8
+PING,22,1,302,-68,11.2
+PING,23,1,302,-69,9.2
+PING,24,1,302,-69,10.0
+PING,25,1,302,-72,12.8
+PING,26,1,302,-71,13.2
+PING,27,1,302,-71,13.0
+PING,28,1,302,-71,12.8
+PING,29,1,302,-72,12.8
+PING,30,1,302,-71,12.8
+PING,31,1,302,-71,13.2
+PING,32,1,302,-70,13.2
+PING,33,1,302,-75,12.0
+PING,34,1,302,-66,13.0
+PING,35,1,302,-67,12.8
+PING,36,1,302,-67,13.0
+PING,37,1,302,-67,13.0
+PING,38,1,302,-67,13.0
+PING,39,1,302,-67,13.0
+PING,40,1,302,-66,12.8
+PING,41,1,302,-66,13.5
+PING,42,1,302,-66,13.0
+PING,43,1,302,-65,13.2
+PING,44,1,302,-66,13.0
+PING,45,1,302,-64,10.0
+PING,46,1,302,-66,13.2
+PING,47,1,302,-68,12.8
+PING,48,1,302,-67,13.0
+PING,49,1,302,-67,12.8
+PING,50,1,302,-67,13.0
+SUMMARY,ok=50,total=50,pct=100.0,avg_rssi=-68.7,avg_snr=12.0,PASS
+# type g + Enter to run again

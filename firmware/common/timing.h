@@ -48,7 +48,9 @@ const uint32_t PROBE_DRIVE_MS   = 30;      // ดึงสายดำลงต�
 inline uint32_t autoSosS() { return hours(2); }   // น้ำขึ้น + ไม่มีใครกด 2 ชม. = ขอแทน
 
 // ---- เสียง
-inline uint32_t warnRepeatS() { return minutes(10); }   // พูดเตือนซ้ำทุก 10 นาที
+// พูดเตือนซ้ำ: 10 ครั้งแรกทุก 1 นาที แล้วทุก 5 นาที จนกว่าจะกดเขียว (ค่าออกแบบ 10 พ.ย. 2569 ผู้ใช้เลือก · เดิมทุก 10 นาที)
+const uint8_t WARN_VOICE_FAST_REPEATS = 10;
+inline uint32_t warnRepeatS(uint8_t repeatsDone) { return repeatsDone < WARN_VOICE_FAST_REPEATS ? minutes(1) : minutes(5); }
 
 // ---- ถ่าน
 const float LOW_BATT_V = 3.9f;   // ถ่าน 3 ก้อน < 3.9 V = ถ่านอ่อน

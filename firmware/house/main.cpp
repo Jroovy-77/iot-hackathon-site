@@ -55,6 +55,7 @@ void logMsg(const char* dir, const proto::Msg& m, float rssi, float snr, bool wi
 bool readProbe() {
   pinMode(pins::PROBE_DRIVE, OUTPUT);
   digitalWrite(pins::PROBE_DRIVE, LOW);
+  analogSetPinAttenuation(pins::BTN_RED, ADC_11db);
   analogReadMilliVolts(pins::BTN_RED);                 // ผูกขาเข้ากับ ADC ก่อน
   gpio_pullup_en((gpio_num_t)pins::BTN_RED);           // ADC ปิดตัวดึงขึ้น → เปิดคืน
   delay(timing::PROBE_DRIVE_MS);
@@ -72,14 +73,24 @@ float readBattery() {
   return mv * pins::BATT_DIVIDER / 1000.0f;
 }
 
+// ระหว่างกดค้างยังไม่ครบ 2 วิ: แหวนค่อย ๆ ติดทีละดวงตามเวลาที่กด (แดง = ขอช่วย · เขียว = ปลอดภัย) ครบ 12 ดวงตอนครบ 2 วิ + บี๊ปสั้น
+// (ผู้ใช้ขอ 10 พ.ย. 2569 · ตอนมีคำเตือน (ส้ม) ปุ่มเขียวกดสั้นก็ใช้ได้เลย จึงไม่แสดงแถบกดค้าง)
 void showRing(uint32_t now) {
   Rgb c = box.light(now);
-  if (red.down() && red.heldMs(now) < timing::HOLD_MS) {   // กดแดงค้างยังไม่ถึง 2 วิ: แดงกะพริบเร็ว
-    c = (now / 150) % 2 ? Rgb{255, 0, 0} : Rgb{0, 0, 0};
+  int lit = pins::LED_RING_COUNT;
+  if (red.down() && red.heldMs(now) < timing::HOLD_MS) {
+    c = Rgb{255, 0, 0};
+    lit = 1 + (int)(red.heldMs(now) * pins::LED_RING_COUNT / timing::HOLD_MS);
+  } else if (green.down() && box.state() != HouseBox::S_WARN && green.heldMs(now) < timing::HOLD_MS) {
+    c = Rgb{0, 255, 0};
+    lit = 1 + (int)(green.heldMs(now) * pins::LED_RING_COUNT / timing::HOLD_MS);
   }
-  if (c.r == shown.r && c.g == shown.g && c.b == shown.b) return;
+  if (lit > pins::LED_RING_COUNT) lit = pins::LED_RING_COUNT;
+  static int shownLit = -1;
+  if (c.r == shown.r && c.g == shown.g && c.b == shown.b && lit == shownLit) return;
   shown = c;
-  ring.fill(ring.Color(c.r, c.g, c.b));
+  shownLit = lit;
+  for (int i = 0; i < pins::LED_RING_COUNT; i++) ring.setPixelColor(i, i < lit ? ring.Color(c.r, c.g, c.b) : 0);
   ring.show();
 }
 
@@ -109,7 +120,7 @@ void setup() {
   pinMode(pins::BTN_GREEN, INPUT);       // R2 100 kΩ ดึงขึ้นภายนอก
   pinMode(pins::PROBE_DRIVE, INPUT);
   analogSetPinAttenuation(pins::BATT_ADC, ADC_11db);
-  analogSetPinAttenuation(pins::BTN_RED, ADC_11db);
+  // BTN_RED เป็นขาปุ่มตลอด: ตั้ง ADC เฉพาะตอนอ่านสายวัดน้ำใน readProbe() (ถ้าตั้งที่นี่ ขาอ่านเป็น LOW ตลอด ปุ่มแดงใช้ไม่ได้ — พบ 8 พ.ย. 2569)
 
   ring.begin();
   ring.setBrightness(BRIGHTNESS);
@@ -139,6 +150,9 @@ void loop() {
   const Button::Event ge = green.update(digitalRead(pins::BTN_GREEN) == LOW, now);
   if (re) Serial.printf("BTN red %s\n", re == Button::LONG ? "long" : re == Button::SHORT ? "short" : "stuck");
   if (ge) Serial.printf("BTN green %s\n", ge == Button::LONG ? "long" : ge == Button::SHORT ? "short" : "stuck");
+  if (re == Button::LONG) audio::play(audio::V_HOLD);                                   // ครบ 2 วิ: บี๊ปสั้นบอกว่าแถบเต็มแล้ว
+  if (ge == Button::LONG && box.state() != HouseBox::S_WARN) audio::play(audio::V_HOLD);
+  if (ge == Button::SHORT && box.state() == HouseBox::S_WARN) audio::play(audio::V_HOLD);   // กดเขียวสั้นตอนเตือน: บี๊ปสั้นทันที (เสียง "ทีมรู้แล้ว" ยังรอ ACK) — ผู้ใช้เสนอ 10 พ.ย. 2569
   box.onRed(re, now);
   box.onGreen(ge, now);
 
@@ -171,7 +185,7 @@ void loop() {
 
   for (uint8_t v; (v = box.popVoice()) != V_NONE;) {
     Serial.printf("VOICE %s\n", voiceName(v));
-    audio::play(v);
+    audio::play(v, box.when());
   }
   audio::loop(now);
 

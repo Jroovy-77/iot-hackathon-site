@@ -1,0 +1,169 @@
+
+=== 2026-11-07 23:34:08 ===
+
+=== 2026-11-07 23:34:15 ===
+
+# [sent s]
+STATE idle retry=0 open=0 wet=0 low=1 wid=0 radio=0 pins_verified=1
+
+# [sent r]
+CMD red long
+STATE sos
+TX SOS id=1001 seq=2 try=1 wet=0 low=1 batt=3.46V t=11s
+RX ACK id=1001 seq=2 ack=SOS/2 rssi=-82 snr=11.2 t=11s
+VOICE V_SOS_SENT
+
+=== 2026-11-07 23:34:51 ===
+
+=== 2026-11-07 23:41:32 ===
+TX STATUS id=1001 seq=1 try=1 wet=0 low=1 batt=2.48V t=1s
+RX ACK id=1001 seq=1 ack=STATUS/1 rssi=-64 snr=9.8 t=1s
+
+# [sent s]
+STATE idle retry=0 open=0 wet=0 low=1 wid=0 radio=0 pins_verified=1
+
+=== 2026-11-07 23:55:13 ===
+RADIO begin=-16 FAIL
+RADIO begin=-16 FAIL
+RADIO begin=-16 FAIL
+RADIO begin=-16 FAIL
+RADIO begin=-16 FAIL
+RADIO begin=-16 FAIL
+RADIO begin=-16 FAIL
+RADIO begin=-16 FAIL
+RADIO begin=-16 FAIL
+RADIO begin=-16 FAIL
+RADIO begin=-16 FAIL
+RADIO begin=-16 FAIL
+RADIO begin=-16 FAIL
+RADIO begin=-16 FAIL
+RADIO begin=-16 FAIL
+RADIO begin=-16 FAIL
+# 8 พ.ย. 00:0x หลังผู้ใช้เช็กสาย: บูตครั้งแรก RADIO begin=-16 FAIL แล้วรอบ retry (5 วิ) ได้ begin=0 OK — ไม่นิ่ง ต้องติดตาม
+
+=== 2026-11-08 00:08:12 ===
+TX STATUS id=1001 seq=2 try=1 wet=0 low=0 batt=4.08V t=20s
+RX ACK id=1001 seq=2 ack=STATUS/2 rssi=-80 snr=10.0 t=21s
+VOICE V_LOW_BATT
+TX STATUS id=1001 seq=3 try=1 wet=0 low=1 batt=3.02V t=40s
+RX ACK id=1001 seq=3 ack=STATUS/3 rssi=-78 snr=12.5 t=40s
+
+=== 2026-11-08 00:20:16 ===
+TX STATUS id=1001 seq=1 try=2 wet=0 low=1 batt=1.82V t=18s
+RX bad code=-1001 rssi=-153 snr=13.5
+TX STATUS id=1001 seq=1 try=3 wet=0 low=1 batt=1.82V t=31s
+RX bad code=-1001 rssi=-71 snr=13.2
+PROBE 2926mV dry t=60s
+BTN red long
+STATE sos
+TX SOS id=1001 seq=2 try=1 wet=0 low=1 batt=1.98V t=103s
+RX ACK id=1001 seq=5 ack=SOS/2 rssi=-69 snr=10.0 t=104s
+VOICE V_SOS_SENT
+PROBE 2926mV dry t=120s
+PROBE 2926mV dry t=180s
+BTN red long
+TX SOS id=1001 seq=3 try=1 wet=0 low=1 batt=1.46V t=212s
+RX ACK id=1001 seq=6 ack=SOS/3 rssi=-71 snr=13.8 t=212s
+VOICE V_SOS_SENT
+BTN red long
+TX SOS id=1001 seq=4 try=1 wet=0 low=1 batt=2.02V t=227s
+RX ACK id=1001 seq=7 ack=SOS/4 rssi=-70 snr=13.2 t=227s
+VOICE V_SOS_SENT
+BTN red long
+TX SOS id=1001 seq=5 try=1 wet=0 low=1 batt=1.68V t=241s
+PROBE 2926mV dry t=242s
+TX SOS id=1001 seq=5 try=2 wet=0 low=1 batt=1.68V t=252s
+RX ACK id=1001 seq=8 ack=SOS/5 rssi=-68 snr=13.5 t=252s
+VOICE V_SOS_SENT
+BTN red long
+TX SOS id=1001 seq=6 try=1 wet=0 low=1 batt=2.30V t=255s
+RX ACK id=1001 seq=9 ack=SOS/6 rssi=-68 snr=13.0 t=255s
+VOICE V_SOS_SENT
+BTN red long
+TX SOS id=1001 seq=7 try=1 wet=0 low=1 batt=1.88V t=266s
+RX ACK id=1001 seq=10 ack=SOS/7 rssi=-68 snr=12.5 t=266s
+VOICE V_SOS_SENT
+BTN red long
+TX SOS id=1001 seq=8 try=1 wet=0 low=1 batt=1.60V t=275s
+RX ACK id=1001 seq=11 ack=SOS/8 rssi=-68 snr=13.0 t=275s
+VOICE V_SOS_SENT
+BTN red long
+TX SOS id=1001 seq=9 try=1 wet=0 low=1 batt=2.24V t=291s
+RX ACK id=1001 seq=12 ack=SOS/9 rssi=-68 snr=13.0 t=291s
+VOICE V_SOS_SENT
+BTN red long
+PROBE 2926mV dry t=305s
+TX SOS id=1001 seq=10 try=1 wet=0 low=1 batt=1.20V t=306s
+RX ACK id=1001 seq=13 ack=SOS/10 rssi=-69 snr=10.0 t=306s
+VOICE V_SOS_SENT
+BTN red long
+TX SOS id=1001 seq=11 try=1 wet=0 low=1 batt=2.30V t=315s
+RX ACK id=1001 seq=14 ack=SOS/11 rssi=-68 snr=13.0 t=316s
+VOICE V_SOS_SENT
+BTN red long
+TX SOS id=1001 seq=12 try=1 wet=0 low=1 batt=1.62V t=330s
+RX ACK id=1001 seq=15 ack=SOS/12 rssi=-68 snr=12.8 t=330s
+VOICE V_SOS_SENT
+BTN red long
+TX SOS id=1001 seq=13 try=1 wet=0 low=1 batt=1.60V t=344s
+RX ACK id=1001 seq=16 ack=SOS/13 rssi=-69 snr=10.0 t=344s
+VOICE V_SOS_SENT
+PROBE 2926mV dry t=365s
+PROBE 2926mV dry t=425s
+PROBE 2926mV dry t=485s
+PROBE 2926mV dry t=545s
+PROBE 2926mV dry t=605s
+BTN green short
+VOICE V_SOS_SENT
+BTN green short
+VOICE V_SOS_SENT
+PROBE 2926mV dry t=665s
+BTN green short
+VOICE V_SOS_SENT
+PROBE 2926mV dry t=725s
+PROBE 2926mV dry t=785s
+PROBE 2926mV dry t=845s
+
+=== 2026-11-08 00:35:20 ===
+RADIO begin=0 OK
+TX STATUS id=1001 seq=1 try=1 wet=0 low=1 batt=3.04V t=5s
+RX ACK id=1001 seq=1 ack=STATUS/1 rssi=-67 snr=12.8 t=5s
+PROBE 2926mV dry t=60s
+BTN green long
+TX SAFE id=1001 seq=2 try=1 wet=0 low=1 batt=3.50V t=110s
+RX ACK id=1001 seq=2 ack=SAFE/2 rssi=-70 snr=12.8 t=110s
+VOICE V_SAFE
+STATE safe
+TX STATUS id=1001 seq=3 try=1 wet=0 low=0 batt=4.04V t=111s
+RX ACK id=1001 seq=3 ack=STATUS/3 rssi=-71 snr=13.2 t=111s
+PROBE 2926mV dry t=120s
+BTN green long
+TX SAFE id=1001 seq=4 try=1 wet=0 low=0 batt=0.30V t=123s
+RX ACK id=1001 seq=4 ack=SAFE/4 rssi=-68 snr=12.5 t=123s
+VOICE V_SAFE
+BTN green long
+TX SAFE id=1001 seq=5 try=1 wet=0 low=0 batt=4.16V t=133s
+RX ACK id=1001 seq=5 ack=SAFE/5 rssi=-69 snr=9.2 t=133s
+VOICE V_SAFE
+BTN green long
+TX SAFE id=1001 seq=6 try=1 wet=0 low=0 batt=4.14V t=147s
+RX ACK id=1001 seq=6 ack=SAFE/6 rssi=-67 snr=12.8 t=147s
+VOICE V_SAFE
+VOICE V_LOW_BATT
+TX STATUS id=1001 seq=7 try=1 wet=0 low=1 batt=3.00V t=162s
+RX ACK id=1001 seq=7 ack=STATUS/7 rssi=-68 snr=10.2 t=162s
+TX STATUS id=1001 seq=8 try=1 wet=0 low=0 batt=4.14V t=172s
+RX ACK id=1001 seq=8 ack=STATUS/8 rssi=-69 snr=10.0 t=172s
+PROBE 2926mV dry t=180s
+VOICE V_LOW_BATT
+TX STATUS id=1001 seq=9 try=1 wet=0 low=1 batt=3.74V t=193s
+RX ACK id=1001 seq=9 ack=STATUS/9 rssi=-66 snr=13.2 t=193s
+
+=== 2026-11-09 20:39:18 ===
+PROBE 2926mV dry t=60s
+PROBE 2926mV dry t=120s
+PROBE 2926mV dry t=180s
+PROBE 2926mV dry t=240s
+PROBE 2926mV dry t=300s
+PROBE 2926mV dry t=360s
+PROBE 2926mV dry t=420s

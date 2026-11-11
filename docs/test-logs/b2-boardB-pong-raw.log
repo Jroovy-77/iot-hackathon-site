@@ -1,0 +1,68 @@
+# B2 บอร์ด B (ตัวรับ, COM5, serial CC:8D:A2:B2:19:28) env:pong — 7 พ.ย. 2569
+# ก่อนถอดสายหลือง (RESET → GPIO10): reset ทุกครั้งได้ boot:0x5 DOWNLOAD (GPIO9 ถูกดึงลง) ไม่รันโปรแกรม (ลอง RTS reset 3 รอบ)
+# ผู้ใช้ตรวจแล้ว: สายหลือง(RESET)อยู่ GPIO10 · GPIO9 ว่าง · ตัวต้านทาน 10k อยู่ GPIO8 (ห่าง 1 แถว) ตรงผัง
+# หลังถอดสายหลืองออก (ปลาย RESET ฝั่งบอร์ด):
+rst:0x15 (USB_UART_CHIP_RESET),boot:0xd (SPI_FAST_FLASH_BOOT)
+# FloodLink PONG (board B) freq=923.2MHz bw=125kHz sf=9 cr=4/5 sync=0x12 tx=14dBm preamble=8 pins_verified=1
+# pins SCK=6 MISO=5 MOSI=7 NSS=8 DIO0=3 RESET=10
+# RADIO begin=0 OK   (ไม่มีสาย RESET ก็ begin=0 ได้)
+PONG,n,rssi,snr
+# ผู้ใช้เสียบสายหลือง(RESET) กลับ (ไม่รู้ว่าเสียบรูเดิมแน่นขึ้นหรือรูใหม่) → reset แล้วบูตปกติ boot:0xd, RADIO begin=0 OK ครบ pins RESET=10
+# สาเหตุที่ DOWNLOAD ก่อนหน้านี้: ยังไม่ยืนยัน (สงสัยสายหลืองหลวม/ลงรูเยื้อง หรือสะพานบัดกรี)
+
+=== B2 run 2026-11-07 23:30:38 ===
+
+# FloodLink PONG (board B) freq=923.2MHz bw=125kHz sf=9 cr=4/5 sync=0x12 tx=14dBm preamble=8 pins_verified=1
+# pins SCK=6 MISO=5 MOSI=7 NSS=8 DIO0=3 RESET=10
+# RADIO begin=0 OK
+PONG,n,rssi,snr
+PONG,1,-64,13.2
+PONG,2,-63,13.2
+PONG,3,-78,12.8
+PONG,4,-70,12.5
+PONG,5,-68,13.2
+PONG,6,-66,13.2
+PONG,7,-67,13.2
+PONG,8,-68,12.8
+PONG,9,-68,12.8
+PONG,10,-70,9.8
+PONG,11,-68,13.0
+PONG,12,-70,10.0
+PONG,13,-72,11.8
+PONG,14,-69,13.2
+PONG,15,-69,11.8
+PONG,16,-67,13.0
+PONG,17,-68,13.0
+PONG,18,-78,12.8
+PONG,19,-70,11.0
+PONG,20,-67,13.2
+PONG,21,-67,13.5
+PONG,22,-67,13.2
+PONG,23,-70,12.0
+PONG,24,-71,12.0
+PONG,25,-77,12.8
+PONG,26,-75,10.0
+PONG,27,-76,9.8
+PONG,28,-76,12.2
+PONG,29,-76,10.5
+PONG,30,-70,12.8
+PONG,31,-69,12.8
+PONG,32,-69,12.8
+PONG,33,-69,12.8
+PONG,34,-66,9.2
+PONG,35,-67,9.5
+PONG,36,-66,9.8
+PONG,37,-66,10.0
+PONG,38,-66,10.5
+PONG,39,-66,10.8
+PONG,40,-66,10.5
+PONG,41,-66,9.5
+PONG,42,-66,9.8
+PONG,43,-65,10.0
+PONG,44,-65,9.5
+PONG,45,-65,9.0
+PONG,46,-65,9.5
+PONG,47,-66,12.8
+PONG,48,-66,10.5
+PONG,49,-66,10.8
+PONG,50,-66,9.0

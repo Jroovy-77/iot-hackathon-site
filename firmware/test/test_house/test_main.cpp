@@ -118,6 +118,38 @@ void test_accepted_sends_box_ack_turns_yellow_once() {
   TEST_ASSERT_EQUAL_UINT8(DONE, m.ack_type);
 }
 
+// พบบนของจริง 9 พ.ย. 2569: ตัวรับรีเซ็ต (เปิดพอร์ตใหม่) → เลขคำขอเริ่มที่ 1 ซ้ำกับคำขอเก่า
+// กล่องต้องยังรับ ACCEPTED/DONE ของคำขอใหม่ได้ (เปลี่ยนสถานะ + พูด) ไม่เมินเพราะเลขเท่าของเก่า
+void test_new_request_accepts_reused_req_no_after_gateway_reset() {
+  HouseBox b(1001, false, minRand); b.begin(0);
+  Msg m;
+  b.onRed(Button::LONG, 0);
+  collect(b, 0, 0, SOS);
+  Msg acc1 = down(ACCEPTED, 1001, 2); acc1.req_no = 1;
+  b.onRadio(acc1, 1000);
+  TEST_ASSERT_EQUAL_INT(HouseBox::S_ACCEPTED, b.state());
+  Msg dn1 = down(DONE, 1001, 3); dn1.req_no = 1;
+  b.onRadio(dn1, 2000);
+  TEST_ASSERT_EQUAL_INT(HouseBox::S_DONE, b.state());
+  while (b.popTx(m, 2000)) {}
+  drainVoices(b);
+
+  // ตัวรับรีเซ็ต แล้วบ้านกดแดงใหม่ → ตัวรับเปิดคำขอเลข 1 อีกครั้ง
+  b.onRed(Button::LONG, 100000);
+  collect(b, 100000, 100000, SOS);
+  drainVoices(b);
+  Msg acc2 = down(ACCEPTED, 1001, 3); acc2.req_no = 1;
+  b.onRadio(acc2, 101000);
+  TEST_ASSERT_EQUAL_INT(HouseBox::S_ACCEPTED, b.state());
+  TEST_ASSERT_EQUAL_UINT8(V_ACCEPTED, b.popVoice());
+  b.onRadio(acc2, 161000);                         // ส่งซ้ำของคำขอใหม่ → ตอบ BOX_ACK แต่ไม่พูดซ้ำ
+  TEST_ASSERT_EQUAL_UINT8(V_NONE, b.popVoice());
+  Msg dn2 = down(DONE, 1001, 4); dn2.req_no = 1;
+  b.onRadio(dn2, 170000);
+  TEST_ASSERT_EQUAL_INT(HouseBox::S_DONE, b.state());
+  TEST_ASSERT_EQUAL_UINT8(V_DONE, b.popVoice());
+}
+
 void test_messages_for_other_house_are_ignored() {
   HouseBox b(1001, false, minRand); b.begin(0);
   Msg acc = down(ACCEPTED, 1002, 30); acc.req_no = 1;
@@ -149,7 +181,7 @@ void test_green_long_sends_safe_and_green_short_replays() {
   TEST_ASSERT_EQUAL_UINT8(V_SAFE, b.popVoice());
 }
 
-void test_warn_voice_repeats_every_10_minutes_until_green() {
+void test_warn_voice_repeats_every_minute_10_times_then_every_5_minutes_until_green() {
   HouseBox b(1001, false, minRand); b.begin(0);
   Msg w = down(WARN, ID_ALL, 1); w.wid = 1;
   b.onRadio(w, 0);
@@ -159,7 +191,7 @@ void test_warn_voice_repeats_every_10_minutes_until_green() {
     Msg m; while (b.popTx(m, t)) {}
     for (uint8_t v; (v = b.popVoice()) != V_NONE;) if (v == V_WARN) warns++;
   }
-  TEST_ASSERT_EQUAL_INT(3, warns);                 // 0, 10, 20 นาที
+  TEST_ASSERT_EQUAL_INT(14, warns);                // ครั้งแรก + ทุก 1 นาที ×10 (1–10) + ทุก 5 นาที (15, 20, 25)
   b.onGreen(Button::SHORT, 25 * 60000u);
   warns = 0;
   for (uint32_t t = 25 * 60000u; t <= 60 * 60000u; t += 1000) {
@@ -253,9 +285,10 @@ int main() {
   RUN_TEST(test_red_long_sends_sos_light_blinks_until_ack);
   RUN_TEST(test_sos_without_ack_retries_and_says_retry_after_3_misses);
   RUN_TEST(test_accepted_sends_box_ack_turns_yellow_once);
+  RUN_TEST(test_new_request_accepts_reused_req_no_after_gateway_reset);
   RUN_TEST(test_messages_for_other_house_are_ignored);
   RUN_TEST(test_green_long_sends_safe_and_green_short_replays);
-  RUN_TEST(test_warn_voice_repeats_every_10_minutes_until_green);
+  RUN_TEST(test_warn_voice_repeats_every_minute_10_times_then_every_5_minutes_until_green);
   RUN_TEST(test_probe_needs_30s_continuous_water_then_status);
   RUN_TEST(test_auto_sos_after_2h_wet_without_press_and_press_restarts_count);
   RUN_TEST(test_non_bed_box_never_auto_sos);

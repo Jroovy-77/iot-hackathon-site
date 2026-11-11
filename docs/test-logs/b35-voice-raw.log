@@ -1,0 +1,147 @@
+
+=== voice firmware first run 2026-11-10 23:33:39 ===
+# [sent r]
+TX STATUS id=1001 seq=1 try=1 wet=0 low=1 batt=2.18V t=1s
+RX ACK id=1001 seq=67 ack=STATUS/1 rssi=-57 snr=12.5 t=1s
+CMD red long
+STATE sos
+TX SOS id=1001 seq=2 try=1 wet=0 low=1 batt=2.18V t=7s
+RX ACK id=1001 seq=68 ack=SOS/2 rssi=-59 snr=13.2 t=7s
+VOICE V_SOS_SENT
+
+=== investigate no light 23:46:35 ===
+ESP-ROM:esp32c3-api1-20210207
+Build:Feb  7 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0xd (SPI_FAST_FLASH_BOOT)
+Saved PC:0x4201da3e
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fcd5810,len:0x38c
+load:0x403cc710,len:0x6a0
+load:0x403ce710,len:0x2624
+entry 0x403cc710
+
+FloodLink house id=1001 bed=1 freq=923.2MHz sf=9 tx=14dBm pins_verified=1
+RADIO begin=0 OK
+PROBE 2926mV dry t=0s
+VOICE V_LOW_BATT
+STATE idle
+TX STATUS id=1001 seq=1 try=1 wet=0 low=1 batt=1.76V t=3s
+RX ACK id=1001 seq=73 ack=STATUS/1 rssi=-67 snr=10.2 t=3s
+
+=== sent r 23:46:50 ===
+CMD red long
+STATE sos
+TX SOS id=1001 seq=2 try=1 wet=0 low=1 batt=2.10V t=18s
+RX ACK id=1001 seq=74 ack=SOS/2 rssi=-63 snr=11.0 t=18s
+VOICE V_SOS_SENT
+RX ACCEPTED id=1001 seq=75 req=5 rssi=-61 snr=10.0 t=26s
+TX BOX_ACK id=1001 seq=3 ack=ACCEPTED/75 t=26s
+VOICE V_ACCEPTED
+STATE accepted
+
+=== reset then r 23:47:39 ===
+ESP-ROM:esp32c3-api1-20210207
+Build:Feb  7 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0xd (SPI_FAST_FLASH_BOOT)
+Saved PC:0x4201da3e
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fcd5810,len:0x38c
+load:0x403cc710,len:0x6a0
+load:0x403ce710,len:0x2624
+entry 0x403cc710
+
+FloodLink house id=1001 bed=1 freq=923.2MHz sf=9 tx=14dBm pins_verified=1
+RADIO begin=0 OK
+PROBE 2926mV dry t=0s
+VOICE V_LOW_BATT
+STATE idle
+TX STATUS id=1001 seq=1 try=1 wet=0 low=1 batt=1.64V t=2s
+RX ACK id=1001 seq=78 ack=STATUS/1 rssi=-68 snr=10.8 t=2s
+# [sent r]
+CMD red long
+STATE sos
+TX SOS id=1001 seq=2 try=1 wet=0 low=1 batt=1.66V t=14s
+RX ACK id=1001 seq=79 ack=SOS/2 rssi=-67 snr=9.8 t=14s
+VOICE V_SOS_SENT
+
+=== after user report 23:50:10 ===
+STATE sos retry=0 open=1 wet=0 low=1 wid=0 radio=0 pins_verified=1
+PROBE 2926mV dry t=151s
+RX DONE id=1001 seq=82 req=6 rssi=-64 snr=13.2 t=151s
+TX BOX_ACK id=1001 seq=5 ack=DONE/82 t=151s
+VOICE V_DONE
+STATE done
+
+=== cycle test 23:50:40 ===
+   0.1 ESP-ROM:esp32c3-api1-20210207
+   0.1 Build:Feb  7 2021
+   0.1 rst:0x15 (USB_UART_CHIP_RESET),boot:0xd (SPI_FAST_FLASH_BOOT)
+   0.1 Saved PC:0x4201da3e
+   0.1 SPIWP:0xee
+   0.1 mode:DIO, clock div:1
+   0.1 load:0x3fcd5810,len:0x38c
+   0.1 load:0x403cc710,len:0x6a0
+   0.1 load:0x403ce710,len:0x2624
+   0.1 entry 0x403cc710
+   0.1 
+   0.1 FloodLink house id=1001 bed=1 freq=923.2MHz sf=9 tx=14dBm pins_verified=1
+   0.1 RADIO begin=0 OK
+   0.1 PROBE 2926mV dry t=0s
+   0.1 VOICE V_LOW_BATT
+   0.1 STATE idle
+   0.9 TX STATUS id=1001 seq=1 try=1 wet=0 low=1 batt=1.50V t=1s
+   1.1 RX ACK id=1001 seq=83 ack=STATUS/1 rssi=-60 snr=9.2 t=1s
+# [sent r]
+  14.1 CMD red long
+  14.1 STATE sos
+  15.0 TX SOS id=1001 seq=2 try=1 wet=0 low=1 batt=1.54V t=15s
+  15.2 RX ACK id=1001 seq=84 ack=SOS/2 rssi=-61 snr=9.8 t=15s
+  15.2 VOICE V_SOS_SENT
+  39.7 RX ACCEPTED id=1001 seq=85 req=7 rssi=-67 snr=13.0 t=40s
+  39.8 TX BOX_ACK id=1001 seq=3 ack=ACCEPTED/85 t=40s
+  39.8 VOICE V_ACCEPTED
+  39.8 STATE accepted
+  48.3 RX DONE id=1001 seq=86 req=7 rssi=-64 snr=12.8 t=48s
+  48.5 TX BOX_ACK id=1001 seq=4 ack=DONE/86 t=48s
+  48.5 VOICE V_DONE
+  48.5 STATE done
+  59.8 PROBE 2926mV dry t=60s
+
+=== cycle test 23:52:18 ===
+   0.1 ESP-ROM:esp32c3-api1-20210207
+   0.1 Build:Feb  7 2021
+   0.1 rst:0x15 (USB_UART_CHIP_RESET),boot:0xd (SPI_FAST_FLASH_BOOT)
+   0.1 Saved PC:0x4201da3e
+   0.1 SPIWP:0xee
+   0.1 mode:DIO, clock div:1
+   0.1 load:0x3fcd5810,len:0x38c
+   0.1 load:0x403cc710,len:0x6a0
+   0.1 load:0x403ce710,len:0x2624
+   0.1 entry 0x403cc710
+   0.1 
+   0.1 FloodLink house id=1001 bed=1 freq=923.2MHz sf=9 tx=14dBm pins_verified=1
+   0.1 RADIO begin=0 OK
+   0.1 PROBE 2926mV dry t=0s
+   0.1 VOICE V_LOW_BATT
+   0.1 STATE idle
+   2.1 TX STATUS id=1001 seq=1 try=1 wet=0 low=1 batt=1.56V t=2s
+   2.2 RX ACK id=1001 seq=87 ack=STATUS/1 rssi=-62 snr=10.0 t=2s
+# [sent r]
+  14.1 CMD red long
+  14.1 STATE sos
+  15.9 TX SOS id=1001 seq=2 try=1 wet=0 low=1 batt=1.52V t=16s
+  16.1 RX ACK id=1001 seq=88 ack=SOS/2 rssi=-62 snr=10.0 t=16s
+  16.1 VOICE V_SOS_SENT
+  34.7 RX ACCEPTED id=1001 seq=89 req=8 rssi=-64 snr=10.0 t=35s
+  34.9 TX BOX_ACK id=1001 seq=3 ack=ACCEPTED/89 t=35s
+  34.9 VOICE V_ACCEPTED
+  34.9 STATE accepted
+  41.2 RX DONE id=1001 seq=90 req=8 rssi=-62 snr=9.5 t=41s
+  41.3 TX BOX_ACK id=1001 seq=4 ack=DONE/90 t=41s
+  41.3 VOICE V_DONE
+  41.3 STATE done
+  59.8 PROBE 2926mV dry t=60s
+ 119.8 PROBE 2926mV dry t=120s
+ 179.8 PROBE 2926mV dry t=180s

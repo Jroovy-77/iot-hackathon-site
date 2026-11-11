@@ -78,6 +78,7 @@ void HouseBox::onRed(Button::Event e, uint32_t nowMs) {
   if (e == Button::NONE || e == Button::STUCK) return;   // ปุ่มค้าง: ไม่ส่งอะไร
   pressed(nowMs);
   if (e != Button::LONG) return;                          // แดงกดสั้น = ไม่ทำอะไร
+  forgetReqNos();
   openReq_ = true;
   if (state_ != S_ACCEPTED) state_ = S_SOS;
   sendUser(SOS, nowMs);
@@ -111,7 +112,8 @@ void HouseBox::onRadio(const Msg& m, uint32_t nowMs) {
     if (!openReq_) {
       state_ = S_WARN;
       say(V_WARN);
-      warnVoiceAtMs_ = nowMs + warnRepeatS() * 1000;
+      warnVoiceRepeats_ = 0;
+      warnVoiceAtMs_ = nowMs + warnRepeatS(warnVoiceRepeats_) * 1000;
     }
     hb_.kick(nowMs / 1000, hbWarnKickS());
     return;
@@ -190,14 +192,16 @@ void HouseBox::tick(uint32_t nowMs) {
   status_.tick(nowMs);
   if (user_.takeRetryVoice(nowMs)) say(V_RETRY);
 
-  if (state_ == S_WARN && reached(nowMs, warnVoiceAtMs_)) {   // พูดเตือนซ้ำทุก 10 นาทีจนกว่าจะกดเขียว
+  if (state_ == S_WARN && reached(nowMs, warnVoiceAtMs_)) {   // พูดเตือนซ้ำ (10 ครั้งแรกทุก 1 นาที แล้วทุก 5 นาที) จนกว่าจะกดเขียว
     say(V_WARN);
-    warnVoiceAtMs_ = nowMs + warnRepeatS() * 1000;
+    if (warnVoiceRepeats_ < 255) warnVoiceRepeats_++;
+    warnVoiceAtMs_ = nowMs + warnRepeatS(warnVoiceRepeats_) * 1000;
   }
 
   if (bed_ && probeWet_ && !openReq_) {   // ขอแทน: น้ำขึ้น + ไม่มีใครกด 2 ชม.
     const uint32_t from = later(tWetMs_, lastPressMs_);
     if (nowMs - from >= autoSosS() * 1000) {
+      forgetReqNos();
       openReq_ = true;
       state_ = S_AUTO_SOS;
       sendUser(AUTO_SOS, nowMs);

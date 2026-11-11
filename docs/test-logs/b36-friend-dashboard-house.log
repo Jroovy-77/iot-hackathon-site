@@ -1,0 +1,123 @@
+
+=== cycle test 19:15:55 ===
+   0.1 ESP-ROM:esp32c3-api1-20210207
+   0.1 Build:Feb  7 2021
+   0.1 rst:0x15 (USB_UART_CHIP_RESET),boot:0xd (SPI_FAST_FLASH_BOOT)
+   0.1 Saved PC:0x4201da3e
+   0.1 SPIWP:0xee
+   0.1 mode:DIO, clock div:1
+   0.1 load:0x3fcd5810,len:0x38c
+   0.1 load:0x403cc710,len:0x6a0
+   0.1 load:0x403ce710,len:0x2624
+   0.1 entry 0x403cc710
+   0.1 
+   0.1 FloodLink house id=1001 bed=1 freq=923.2MHz sf=9 tx=14dBm pins_verified=1
+   0.1 RADIO begin=0 OK
+   0.1 PROBE 2926mV dry t=0s
+   0.1 STATE idle
+# [sent r]
+  14.1 CMD red long
+  14.1 STATE sos
+  15.1 TX SOS id=1001 seq=1 try=1 wet=0 low=0 batt=4.72V t=15s
+  29.0 TX SOS id=1001 seq=1 try=2 wet=0 low=0 batt=4.72V t=29s
+  29.1 RX ACK id=1001 seq=1 ack=SOS/1 rssi=-62 snr=10.0 t=29s
+  29.1 VOICE V_SOS_SENT
+  59.8 PROBE 2926mV dry t=60s
+ 119.8 PROBE 2926mV dry t=120s
+
+=== house watch 19:19:24 ===
+   0.0 # [port opened]
+  10.4 
+  10.4 FloodLink house id=1001 bed=1 freq=923.2MHz sf=9 tx=14dBm pins_verified=1
+  10.4 RADIO begin=0 OK
+  10.4 PROBE 2926mV dry t=0s
+  10.4 STATE idle
+  10.4 TX STATUS id=1001 seq=1 try=1 wet=0 low=0 batt=4.64V t=24s
+  25.2 TX STATUS id=1001 seq=1 try=2 wet=0 low=0 batt=4.64V t=39s
+  25.4 RX ACK id=1001 seq=2 ack=STATUS/1 rssi=-70 snr=13.0 t=39s
+  25.9 RX ACCEPTED id=1001 seq=3 req=1 rssi=-69 snr=13.0 t=39s
+  26.0 TX BOX_ACK id=1001 seq=2 ack=ACCEPTED/3 t=39s
+  26.0 VOICE V_ACCEPTED
+  26.0 STATE accepted
+  39.7 RX DONE id=1001 seq=4 req=1 rssi=-95 snr=9.2 t=53s
+  39.8 TX BOX_ACK id=1001 seq=3 ack=DONE/4 t=53s
+  39.8 VOICE V_DONE
+  39.8 STATE done
+  50.1 PROBE 2926mV dry t=60s
+  50.1 BTN red long
+  50.1 STATE sos
+  51.5 TX SOS id=1001 seq=4 try=1 wet=0 low=0 batt=4.62V t=65s
+  51.7 RX ACK id=1001 seq=5 ack=SOS/4 rssi=-92 snr=8.5 t=65s
+  51.7 VOICE V_SOS_SENT
+  84.9 RX WARN id=65535 seq=6 wid=1 when=1 rssi=-77 snr=10.2 t=98s
+  88.3 RX WARN id=65535 seq=7 wid=2 when=1 rssi=-77 snr=10.0 t=102s
+ 106.4 PROBE 2926mV dry t=120s
+ 117.9 RX WARN id=65535 seq=8 wid=2 when=1 rssi=-77 snr=9.8 t=131s
+ 147.9 RX WARN id=65535 seq=9 wid=2 when=1 rssi=-81 snr=12.2 t=161s
+ 157.4 TX STATUS id=1001 seq=5 try=1 wet=0 low=0 batt=4.52V t=171s
+ 157.5 RX ACK id=1001 seq=10 ack=STATUS/5 rssi=-77 snr=11.0 t=171s
+ 166.4 PROBE 2926mV dry t=180s
+ 226.4 PROBE 2926mV dry t=240s
+ 226.4 VOICE V_LOW_BATT
+ 227.6 TX STATUS id=1001 seq=6 try=1 wet=0 low=1 batt=3.74V t=241s
+ 227.7 RX ACK id=1001 seq=11 ack=STATUS/6 rssi=-66 snr=12.5 t=241s
+ 236.8 TX STATUS id=1001 seq=7 try=1 wet=0 low=0 batt=4.38V t=250s
+ 237.0 RX ACK id=1001 seq=12 ack=STATUS/7 rssi=-67 snr=13.0 t=250s
+ 295.7 PROBE 2926mV dry t=300s
+ 295.7 RX ACCEPTED id=1001 seq=13 req=2 rssi=-71 snr=13.2 t=309s
+ 295.8 TX BOX_ACK id=1001 seq=8 ack=ACCEPTED/13 t=309s
+ 295.8 VOICE V_ACCEPTED
+ 295.8 STATE accepted
+ 312.1 RX DONE id=1001 seq=14 req=2 rssi=-71 snr=13.2 t=326s
+ 312.3 TX BOX_ACK id=1001 seq=9 ack=DONE/14 t=326s
+ 312.3 VOICE V_DONE
+ 312.3 STATE done
+ 346.4 PROBE 2926mV dry t=360s
+ 394.9 BTN red long
+ 394.9 STATE sos
+ 395.1 TX SOS id=1001 seq=10 try=1 wet=0 low=0 batt=4.34V t=408s
+ 395.2 RX ACK id=1001 seq=15 ack=SOS/10 rssi=-71 snr=13.0 t=409s
+ 395.2 VOICE V_SOS_SENT
+ 402.9 RX ACCEPTED id=1001 seq=16 req=3 rssi=-72 snr=12.8 t=416s
+ 403.1 TX BOX_ACK id=1001 seq=11 ack=ACCEPTED/16 t=416s
+ 403.1 VOICE V_ACCEPTED
+ 403.1 STATE accepted
+ 406.4 PROBE 2926mV dry t=420s
+ 412.1 RX DONE id=1001 seq=17 req=3 rssi=-71 snr=12.8 t=425s
+ 412.3 TX BOX_ACK id=1001 seq=12 ack=DONE/17 t=426s
+ 412.3 VOICE V_DONE
+ 412.3 STATE done
+ 441.8 RX WARN id=65535 seq=18 wid=3 when=1 rssi=-75 snr=13.0 t=455s
+ 441.8 VOICE V_WARN
+ 441.8 STATE warn
+ 466.4 PROBE 2926mV dry t=480s
+ 470.9 RX WARN id=65535 seq=19 wid=3 when=1 rssi=-65 snr=12.5 t=484s
+ 500.9 RX WARN id=65535 seq=20 wid=3 when=1 rssi=-69 snr=12.8 t=514s
+ 501.8 VOICE V_WARN
+ 514.3 BTN green long
+ 514.3 STATE heard
+ 514.5 TX HEARD id=1001 seq=13 wid=3 t=528s
+ 514.6 RX ACK id=1001 seq=21 ack=HEARD/13 rssi=-75 snr=12.8 t=528s
+ 514.6 VOICE V_HEARD
+ 526.4 PROBE 2926mV dry t=540s
+ 559.2 TX STATUS id=1001 seq=14 try=1 wet=0 low=0 batt=4.40V t=573s
+ 576.9 TX STATUS id=1001 seq=14 try=2 wet=0 low=0 batt=4.40V t=590s
+ 586.3 PROBE 2926mV dry t=600s
+ 593.7 TX STATUS id=1001 seq=14 try=3 wet=0 low=0 batt=4.40V t=607s
+ 646.3 PROBE 2926mV dry t=660s
+ 706.3 PROBE 2926mV dry t=720s
+ 766.4 PROBE 2926mV dry t=780s
+ 826.4 PROBE 2926mV dry t=840s
+ 886.3 PROBE 2926mV dry t=900s
+ 946.4 PROBE 2926mV dry t=960s
+1006.3 PROBE 2926mV dry t=1020s
+1066.3 PROBE 2926mV dry t=1080s
+1126.4 PROBE 2926mV dry t=1140s
+1186.3 PROBE 2926mV dry t=1200s
+1246.4 PROBE 2926mV dry t=1260s
+1306.4 PROBE 2926mV dry t=1320s
+1366.3 PROBE 2926mV dry t=1380s
+1426.3 PROBE 2926mV dry t=1440s
+1486.3 PROBE 2926mV dry t=1500s
+1546.3 PROBE 2926mV dry t=1560s
+1606.3 PROBE 2926mV dry t=1620s

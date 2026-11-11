@@ -66,6 +66,7 @@ class HouseBox {
   bool openReq_ = false;
   uint8_t lastWid_ = 0, when_ = 0;
   uint32_t warnVoiceAtMs_ = 0;
+  uint8_t warnVoiceRepeats_ = 0;   // พูดเตือนซ้ำไปแล้วกี่ครั้ง (ไม่นับครั้งแรก) ใช้เลือกช่วงห่าง
   bool warnSeen_ = false;
   uint32_t warnHeardMs_ = 0;
   // สายวัดน้ำ
@@ -76,6 +77,8 @@ class HouseBox {
   bool lowBatt_ = false;
   // ACCEPTED / DONE ที่เคยพูดแล้ว (ข้อความซ้ำตอบ BOX_ACK อย่างเดียว)
   uint8_t heardReqAccepted_ = 0, heardReqDone_ = 0;
+  // คำขอใหม่ (กดแดงค้าง / ขอแทน): ล้างเลขที่จำไว้ เพราะตัวรับที่รีเซ็ตจะเริ่มเลขคำขอที่ 1 ใหม่ (พบ 9 พ.ย. 2569)
+  void forgetReqNos() { heardReqAccepted_ = heardReqDone_ = 0; }
   // คิว
   proto::Msg boxAcks_[4];
   uint8_t boxAckN_ = 0;
